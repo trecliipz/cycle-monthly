@@ -26,15 +26,15 @@ const App = () => (
         position="top-center"
         toastOptions={{
           style: {
-            background: "white",
-            color: "#7E69AB",
-            border: "1px solid #E5DEFF",
+            background: "var(--background)",
+            color: "var(--foreground)",
+            border: "1px solid var(--border)",
             borderRadius: "0.75rem",
           }
         }}
       />
       <BrowserRouter>
-        <div className="bg-gradient-to-b from-white via-period-lavender/10 to-period-softBlue/20 min-h-screen">
+        <div className="bg-gradient-to-b from-white via-period-lavender/10 to-period-softBlue/20 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 min-h-screen">
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/calendar" element={<CalendarPage />} />

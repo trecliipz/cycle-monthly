@@ -5,13 +5,14 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Bell, Moon, User, Lock, HelpCircle, ChevronRight, Clock } from "lucide-react";
+import { Bell, Moon, User, Lock, HelpCircle, ChevronRight, Clock, Sun } from "lucide-react";
 import { toast } from "sonner";
+import { useTheme } from "@/hooks/useTheme";
 
 export default function SettingsPage() {
   const [periodReminder, setPeriodReminder] = useState(true);
   const [ovulationReminder, setOvulationReminder] = useState(true);
-  const [darkMode, setDarkMode] = useState(false);
+  const { isDark, toggleTheme } = useTheme();
   const [appLock, setAppLock] = useState(false);
 
   const handleSave = () => {
@@ -24,7 +25,7 @@ export default function SettingsPage() {
         <h1 className="text-2xl font-semibold text-center text-period-accent">Settings</h1>
       </header>
 
-      <Card className="bg-white shadow-sm">
+      <Card className="bg-white shadow-sm dark:bg-gray-800 dark:text-gray-100">
         <CardHeader className="pb-2">
           <CardTitle className="text-lg flex items-center gap-2">
             <User className="h-5 w-5" />
@@ -39,7 +40,7 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
 
-      <Card className="bg-white shadow-sm">
+      <Card className="bg-white shadow-sm dark:bg-gray-800 dark:text-gray-100">
         <CardHeader className="pb-2">
           <CardTitle className="text-lg flex items-center gap-2">
             <Bell className="h-5 w-5" />
@@ -50,7 +51,7 @@ export default function SettingsPage() {
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <Label htmlFor="period-reminder">Period Reminder</Label>
-              <p className="text-xs text-muted-foreground">Get notified before your next period</p>
+              <p className="text-xs text-muted-foreground dark:text-gray-300">Get notified before your next period</p>
             </div>
             <Switch
               id="period-reminder"
@@ -62,7 +63,7 @@ export default function SettingsPage() {
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <Label htmlFor="ovulation-reminder">Ovulation Reminder</Label>
-              <p className="text-xs text-muted-foreground">Get notified before your fertile window</p>
+              <p className="text-xs text-muted-foreground dark:text-gray-300">Get notified before your fertile window</p>
             </div>
             <Switch
               id="ovulation-reminder"
@@ -73,7 +74,7 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
 
-      <Card className="bg-white shadow-sm">
+      <Card className="bg-white shadow-sm dark:bg-gray-800 dark:text-gray-100">
         <CardHeader className="pb-2">
           <CardTitle className="text-lg flex items-center gap-2">
             <Clock className="h-5 w-5" />
@@ -83,31 +84,36 @@ export default function SettingsPage() {
         <CardContent>
           <Button variant="outline" className="w-full justify-between">
             Default Cycle Length
-            <span className="text-muted-foreground">28 days</span>
+            <span className="text-muted-foreground dark:text-gray-300">28 days</span>
           </Button>
         </CardContent>
       </Card>
 
-      <Card className="bg-white shadow-sm">
+      <Card className="bg-white shadow-sm dark:bg-gray-800 dark:text-gray-100">
         <CardHeader className="pb-2">
           <CardTitle className="text-lg flex items-center gap-2">
-            <Moon className="h-5 w-5" />
+            {isDark ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
             Appearance
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-between">
-            <Label htmlFor="dark-mode">Dark Mode</Label>
+            <div className="space-y-0.5">
+              <Label htmlFor="dark-mode">Dark Mode</Label>
+              <p className="text-xs text-muted-foreground dark:text-gray-300">
+                {isDark ? "Switch to light mode" : "Switch to dark mode"}
+              </p>
+            </div>
             <Switch
               id="dark-mode"
-              checked={darkMode}
-              onCheckedChange={setDarkMode}
+              checked={isDark}
+              onCheckedChange={toggleTheme}
             />
           </div>
         </CardContent>
       </Card>
 
-      <Card className="bg-white shadow-sm">
+      <Card className="bg-white shadow-sm dark:bg-gray-800 dark:text-gray-100">
         <CardHeader className="pb-2">
           <CardTitle className="text-lg flex items-center gap-2">
             <Lock className="h-5 w-5" />
@@ -118,7 +124,7 @@ export default function SettingsPage() {
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <Label htmlFor="app-lock">App Lock</Label>
-              <p className="text-xs text-muted-foreground">Require authentication to open the app</p>
+              <p className="text-xs text-muted-foreground dark:text-gray-300">Require authentication to open the app</p>
             </div>
             <Switch
               id="app-lock"
@@ -134,7 +140,7 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
 
-      <Card className="bg-white shadow-sm">
+      <Card className="bg-white shadow-sm dark:bg-gray-800 dark:text-gray-100">
         <CardHeader className="pb-2">
           <CardTitle className="text-lg flex items-center gap-2">
             <HelpCircle className="h-5 w-5" />
@@ -157,7 +163,7 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
 
-      <div className="text-center py-4 text-xs text-muted-foreground">
+      <div className="text-center py-4 text-xs text-muted-foreground dark:text-gray-400">
         Monthly v1.0.0
       </div>
     </div>
