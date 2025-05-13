@@ -25,7 +25,7 @@ const Index = () => {
   return (
     <div className="min-h-screen px-4 py-8 md:py-12 mx-auto max-w-7xl">
       <header className="text-center mb-8 md:mb-12">
-        <h1 className="text-3xl md:text-4xl font-bold text-period-accent mb-2">Bloom</h1>
+        <h1 className="text-3xl md:text-4xl font-bold text-period-accent mb-2">Monthly</h1>
         <p className="text-muted-foreground">Simple Period Tracking</p>
       </header>
 
