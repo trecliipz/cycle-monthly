@@ -8,6 +8,7 @@ import {
   isDateInPredictedPeriod,
   predictNextPeriod
 } from "@/utils/periodUtils";
+import { DayContent } from "react-day-picker";
 
 interface PeriodCalendarProps {
   selectedDate: Date | undefined;
@@ -57,11 +58,17 @@ export function PeriodCalendar({
           prediction: "bg-period-light text-period-text",
         }}
         components={{
-          Day: ({ day, date }) => (
-            <div className={cn(dayStyle(date), "h-9 w-9 p-0 font-normal aria-selected:opacity-100")}>
-              {day}
-            </div>
-          ),
+          Day: (props) => {
+            // Extract the content and date from the props
+            const content = props.children as React.ReactNode;
+            const date = props.date;
+            
+            return (
+              <div className={cn(dayStyle(date), "h-9 w-9 p-0 font-normal aria-selected:opacity-100")}>
+                {content}
+              </div>
+            );
+          },
         }}
       />
       
