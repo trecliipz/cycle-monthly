@@ -57,8 +57,8 @@ export function PeriodCalendar({
           prediction: "bg-period-light text-period-text",
         }}
         components={{
-          Day: (props) => (
-            <div className={cn(dayStyle(props.date), "h-9 w-9 p-0 font-normal aria-selected:opacity-100")}>
+          Day: ({ date, ...props }) => (
+            <div className={cn(dayStyle(date), "h-9 w-9 p-0 font-normal aria-selected:opacity-100")}>
               {props.children}
             </div>
           ),
