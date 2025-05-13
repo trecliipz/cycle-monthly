@@ -62,11 +62,12 @@ export function PeriodCalendar({
             // Access the date property directly from props
             const { date } = props;
             
-            // In react-day-picker v8+, the content is provided through the render prop pattern
-            // so we render the default day content and wrap it with our custom styling
+            // In react-day-picker v8+, we need to display the day number from the date
+            const dayNumber = date.getDate();
+            
             return (
               <div className={cn(dayStyle(date), "h-9 w-9 p-0 font-normal aria-selected:opacity-100")}>
-                {props.day}
+                {dayNumber}
               </div>
             );
           },
