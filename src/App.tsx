@@ -14,7 +14,7 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <Toaster position="top-center" />
+      <Toaster />
       <Sonner 
         position="top-center"
         toastOptions={{
