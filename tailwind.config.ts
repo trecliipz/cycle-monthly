@@ -63,13 +63,17 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				// Custom theme colors for period tracker
 				period: {
 					light: '#FBE3F1',
 					main: '#D6BCFA',
 					dark: '#9b87f5',
 					accent: '#7E69AB',
-					text: '#1A1F2C'
+					text: '#1A1F2C',
+					pink: '#FF82AC',
+					lavender: '#E5DEFF',
+					softBlue: '#D3E4FD',
+					card: '#F8F6FF',
+					highlight: '#FFC3D8'
 				}
 			},
 			borderRadius: {
@@ -97,12 +101,23 @@ export default {
 				pulse: {
 					'0%, 100%': { opacity: '1' },
 					'50%': { opacity: '0.7' }
+				},
+				'float': {
+					'0%, 100%': { transform: 'translateY(0px)' },
+					'50%': { transform: 'translateY(-5px)' }
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out',
-				'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+				'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+				'float': 'float 3s ease-in-out infinite'
+			},
+			fontFamily: {
+				sans: ['Inter', 'sans-serif'],
+			},
+			boxShadow: {
+				'flo': '0 10px 25px -5px rgba(124, 105, 171, 0.15)'
 			}
 		}
 	},

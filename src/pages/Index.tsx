@@ -1,11 +1,11 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { PeriodCalendar } from "@/components/PeriodCalendar";
 import { PeriodForm } from "@/components/PeriodForm";
 import { CycleStats } from "@/components/CycleStats";
-import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
+import { Calendar, Heart, Baby } from "lucide-react";
 
 const Index = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -23,44 +23,68 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen px-4 py-8 md:py-12 mx-auto max-w-7xl">
-      <header className="text-center mb-8 md:mb-12">
-        <h1 className="text-3xl md:text-4xl font-bold text-period-accent mb-2">Monthly</h1>
-        <p className="text-muted-foreground">Simple Period Tracking</p>
+    <div className="min-h-screen bg-gradient-to-b from-white to-period-lavender/30 px-4 py-6 md:py-10 mx-auto max-w-7xl">
+      <header className="text-center mb-8 md:mb-10">
+        <h1 className="text-3xl md:text-4xl font-bold mb-2 bg-gradient-to-r from-period-pink to-period-dark bg-clip-text text-transparent animate-pulse-slow">
+          Monthly
+        </h1>
+        <p className="text-muted-foreground text-sm md:text-base">Your personal cycle companion</p>
       </header>
 
-      <Tabs defaultValue="calendar" className="w-full">
-        <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 mb-8">
-          <TabsTrigger value="calendar">Calendar</TabsTrigger>
-          <TabsTrigger value="stats">Cycle Stats</TabsTrigger>
-        </TabsList>
+      <div className="relative max-w-md mx-auto mb-8 rounded-2xl bg-white/70 backdrop-blur-sm shadow-flo p-1">
+        <Tabs defaultValue="calendar" className="w-full">
+          <TabsList className="grid w-full grid-cols-3 h-12 rounded-xl bg-period-lavender/20 p-1">
+            <TabsTrigger 
+              value="calendar"
+              className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-period-accent data-[state=active]:shadow-sm flex items-center justify-center gap-2">
+              <Calendar className="h-4 w-4" />
+              <span className="hidden md:inline">Calendar</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="log" 
+              className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-period-accent data-[state=active]:shadow-sm flex items-center justify-center gap-2">
+              <Heart className="h-4 w-4" />
+              <span className="hidden md:inline">Log</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="stats" 
+              className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-period-accent data-[state=active]:shadow-sm flex items-center justify-center gap-2">
+              <Baby className="h-4 w-4" />
+              <span className="hidden md:inline">Cycle Stats</span>
+            </TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="calendar" className="mx-auto">
-          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-5">
-            <div className="flex flex-col space-y-6 md:col-span-1 lg:col-span-2">
-              <PeriodCalendar 
-                key={`calendar-${key}`} 
-                selectedDate={selectedDate}
-                onSelect={handleDateSelect}
-                className="mx-auto max-w-sm"
-              />
+          <TabsContent value="calendar" className="mx-auto mt-6 focus-visible:outline-none focus-visible:ring-0">
+            <div className="flex flex-col md:flex-row gap-8">
+              <div className="flex-1">
+                <div className="bg-white rounded-2xl shadow-sm p-4 mb-4">
+                  <PeriodCalendar 
+                    key={`calendar-${key}`} 
+                    selectedDate={selectedDate}
+                    onSelect={handleDateSelect}
+                    className="mx-auto max-w-sm"
+                  />
+                </div>
+              </div>
             </div>
+          </TabsContent>
 
-            <div className="md:col-span-1 lg:col-span-3">
+          <TabsContent value="log" className="mx-auto mt-6 focus-visible:outline-none focus-visible:ring-0">
+            <div className="bg-white rounded-2xl shadow-sm p-4">
               <PeriodForm 
                 selectedDate={selectedDate}
                 onSave={handlePeriodSaved}
               />
             </div>
-          </div>
-        </TabsContent>
+          </TabsContent>
 
-        <TabsContent value="stats">
-          <div className="max-w-md mx-auto">
-            <CycleStats key={`stats-${key}`} />
-          </div>
-        </TabsContent>
-      </Tabs>
+          <TabsContent value="stats" className="mx-auto mt-6 focus-visible:outline-none focus-visible:ring-0">
+            <div className="bg-white rounded-2xl shadow-sm p-4">
+              <CycleStats key={`stats-${key}`} />
+            </div>
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   );
 };

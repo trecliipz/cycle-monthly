@@ -1,4 +1,5 @@
 
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -14,16 +15,16 @@
     --popover: 0 0% 100%;
     --popover-foreground: 224 71% 4%;
 
-    --primary: 262 80% 75%;
+    --primary: 315 100% 75%;
     --primary-foreground: 300 0% 100%;
 
-    --secondary: 260 31% 88%;
+    --secondary: 260 31% 96%;
     --secondary-foreground: 224 71% 4%;
 
     --muted: 220 14% 96%;
     --muted-foreground: 220 8% 46%;
 
-    --accent: 262 80% 75%;
+    --accent: 315 100% 75%;
     --accent-foreground: 300 0% 100%;
 
     --destructive: 0 84% 60%;
@@ -31,9 +32,9 @@
 
     --border: 220 13% 91%;
     --input: 220 13% 91%;
-    --ring: 262 80% 75%;
+    --ring: 315 100% 75%;
 
-    --radius: 0.75rem;
+    --radius: 1rem;
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
@@ -55,7 +56,7 @@
     --popover: 224 71% 4%;
     --popover-foreground: 210 20% 98%;
 
-    --primary: 262 80% 60%;
+    --primary: 315 100% 65%;
     --primary-foreground: 210 20% 98%;
 
     --secondary: 215 27% 17%;
@@ -64,7 +65,7 @@
     --muted: 215 27% 17%;
     --muted-foreground: 217.9 10.6% 64.9%;
 
-    --accent: 215 27% 17%;
+    --accent: 315 100% 65%;
     --accent-foreground: 210 20% 98%;
 
     --destructive: 0 62.8% 30.6%;
@@ -72,7 +73,7 @@
 
     --border: 215 27% 17%;
     --input: 215 27% 17%;
-    --ring: 263.4 70% 50.4%;
+    --ring: 315 100% 60%;
     
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
@@ -91,20 +92,33 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans;
   }
 }
 
 @layer utilities {
   .period-dot {
-    @apply w-2 h-2 rounded-full bg-period-dark;
+    @apply w-2 h-2 rounded-full bg-period-pink;
   }
   
   .period-active {
-    @apply bg-period-main text-period-text font-medium;
+    @apply bg-period-highlight text-period-pink font-medium;
   }
   
   .prediction-dot {
-    @apply w-2 h-2 rounded-full bg-period-accent/60;
+    @apply w-2 h-2 rounded-full bg-period-lavender;
+  }
+
+  .flo-card {
+    @apply bg-white rounded-2xl shadow-flo p-4;
+  }
+  
+  .flo-gradient-text {
+    @apply bg-gradient-to-r from-period-pink to-period-dark bg-clip-text text-transparent;
+  }
+  
+  .flo-button {
+    @apply bg-gradient-to-r from-period-pink to-period-dark text-white rounded-full px-6 py-2 
+    hover:opacity-90 transition-all shadow-md;
   }
 }
