@@ -1,0 +1,92 @@
+
+import { useState } from "react";
+import { PeriodCalendar } from "@/components/PeriodCalendar";
+import { PeriodForm } from "@/components/PeriodForm";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Pencil } from "lucide-react";
+import { format } from "date-fns";
+import { getDataForDate } from "@/utils/periodUtils";
+
+export default function CalendarPage() {
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [showForm, setShowForm] = useState(false);
+  const [key, setKey] = useState(0);
+
+  const handleDateSelect = (date: Date | undefined) => {
+    if (date) {
+      setSelectedDate(date);
+      setShowForm(false);
+    }
+  };
+
+  const handlePeriodSaved = () => {
+    setKey(prev => prev + 1);
+    setShowForm(false);
+  };
+
+  const periodData = getDataForDate(selectedDate);
+
+  return (
+    <div className="flex flex-col pb-20 px-4 space-y-5">
+      <header className="mt-6 mb-2">
+        <h1 className="text-2xl font-semibold text-center text-period-accent">Calendar</h1>
+      </header>
+
+      <Card className="bg-white shadow-sm p-4">
+        <PeriodCalendar
+          key={`calendar-${key}`}
+          selectedDate={selectedDate}
+          onSelect={handleDateSelect}
+          className="mx-auto"
+        />
+      </Card>
+
+      <Card className="bg-white shadow-sm p-4">
+        {!showForm ? (
+          <div className="flex flex-col space-y-4">
+            <div className="flex justify-between items-center">
+              <h2 className="text-lg font-medium">{format(selectedDate, 'MMMM d, yyyy')}</h2>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setShowForm(true)}
+                className="text-period-accent hover:bg-period-lavender/20"
+              >
+                <Pencil className="h-4 w-4 mr-1" />
+                {periodData ? "Edit" : "Log"}
+              </Button>
+            </div>
+            
+            {periodData ? (
+              <div className="space-y-2 text-sm">
+                {periodData.flow !== "none" && (
+                  <p><span className="font-medium">Flow:</span> {periodData.flow}</p>
+                )}
+                {periodData.symptoms.cramps !== "none" && (
+                  <p><span className="font-medium">Cramps:</span> {periodData.symptoms.cramps}</p>
+                )}
+                {periodData.symptoms.headache !== "none" && (
+                  <p><span className="font-medium">Headache:</span> {periodData.symptoms.headache}</p>
+                )}
+                {periodData.symptoms.mood !== "neutral" && (
+                  <p><span className="font-medium">Mood:</span> {periodData.symptoms.mood}</p>
+                )}
+                {periodData.symptoms.notes && (
+                  <p><span className="font-medium">Notes:</span> {periodData.symptoms.notes}</p>
+                )}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">No data logged for this day.</p>
+            )}
+          </div>
+        ) : (
+          <PeriodForm 
+            selectedDate={selectedDate}
+            onSave={handlePeriodSaved}
+          />
+        )}
+      </Card>
+    </div>
+  );
+}
