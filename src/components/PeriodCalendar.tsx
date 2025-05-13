@@ -8,7 +8,7 @@ import {
   isDateInPredictedPeriod,
   predictNextPeriod
 } from "@/utils/periodUtils";
-import { DayContent } from "react-day-picker";
+import { DayProps } from "react-day-picker";
 
 interface PeriodCalendarProps {
   selectedDate: Date | undefined;
@@ -58,14 +58,15 @@ export function PeriodCalendar({
           prediction: "bg-period-light text-period-text",
         }}
         components={{
-          Day: (props) => {
-            // Extract the content and date from the props
-            const content = props.children as React.ReactNode;
-            const date = props.date;
+          Day: (props: DayProps) => {
+            // Access the date property directly from props
+            const { date } = props;
             
+            // In react-day-picker v8+, the content is provided through the render prop pattern
+            // so we render the default day content and wrap it with our custom styling
             return (
               <div className={cn(dayStyle(date), "h-9 w-9 p-0 font-normal aria-selected:opacity-100")}>
-                {content}
+                {props.day}
               </div>
             );
           },
