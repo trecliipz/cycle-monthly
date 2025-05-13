@@ -6,6 +6,7 @@ import { addDays, isSameDay, isWithinInterval, startOfDay } from "date-fns";
 import {
   hasDataForDate,
   isDateInPredictedPeriod,
+  isDateInOvulationPeriod,
   predictNextPeriod
 } from "@/utils/periodUtils";
 import { DayProps } from "react-day-picker";
@@ -27,9 +28,14 @@ export function PeriodCalendar({
   const prediction = predictNextPeriod();
   
   const dayStyle = (date: Date) => {
-    // Period logged days (show with a dot underneath)
+    // Period logged days (show with a red dot)
     if (hasDataForDate(date)) {
       return "relative period-logged after:absolute after:period-dot after:left-1/2 after:-translate-x-1/2 after:bottom-1";
+    }
+    
+    // Ovulation days (show with a pink dot)
+    if (isDateInOvulationPeriod(date)) {
+      return "relative ovulation-day after:absolute after:ovulation-dot after:left-1/2 after:-translate-x-1/2 after:bottom-1";
     }
     
     // Predicted period days (show with a lighter dot)
@@ -52,10 +58,12 @@ export function PeriodCalendar({
         modifiers={{
           period: (date) => hasDataForDate(date),
           prediction: (date) => prediction ? isDateInPredictedPeriod(date) : false,
+          ovulation: (date) => isDateInOvulationPeriod(date),
         }}
         modifiersClassNames={{
           period: "period-active",
           prediction: "bg-period-light text-period-text",
+          ovulation: "bg-ovulation-light text-ovulation-text",
         }}
         components={{
           Day: (props: DayProps) => {
@@ -74,14 +82,22 @@ export function PeriodCalendar({
         }}
       />
       
-      {prediction && (
-        <div className="text-sm text-muted-foreground">
+      <div className="text-sm text-muted-foreground">
+        <div className="flex flex-wrap gap-4">
+          <p className="flex items-center">
+            <span className="period-dot mr-2"></span>
+            Period
+          </p>
+          <p className="flex items-center">
+            <span className="ovulation-dot mr-2"></span>
+            Ovulation
+          </p>
           <p className="flex items-center">
             <span className="prediction-dot mr-2"></span>
-            Predicted period
+            Predicted
           </p>
         </div>
-      )}
+      </div>
     </div>
   );
 }

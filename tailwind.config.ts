@@ -74,6 +74,16 @@ export default {
 					softBlue: '#D3E4FD',
 					card: '#F8F6FF',
 					highlight: '#FFC3D8'
+				},
+				rose: {
+					100: '#FFE4E6',
+					500: '#F43F5E',
+					700: '#BE123C'
+				},
+				pink: {
+					100: '#FCE7F3',
+					400: '#F472B6',
+					700: '#BE185D'
 				}
 			},
 			borderRadius: {

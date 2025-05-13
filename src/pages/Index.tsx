@@ -3,9 +3,10 @@ import { useState } from "react";
 import { PeriodCalendar } from "@/components/PeriodCalendar";
 import { PeriodForm } from "@/components/PeriodForm";
 import { CycleStats } from "@/components/CycleStats";
+import { PeriodHealth } from "@/components/PeriodHealth";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Calendar, Heart, Baby } from "lucide-react";
+import { Calendar, Heart, Baby, Apple } from "lucide-react";
 
 const Index = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -33,7 +34,7 @@ const Index = () => {
 
       <div className="relative max-w-md mx-auto mb-8 rounded-2xl bg-white/70 backdrop-blur-sm shadow-flo p-1">
         <Tabs defaultValue="calendar" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 h-12 rounded-xl bg-period-lavender/20 p-1">
+          <TabsList className="grid w-full grid-cols-4 h-12 rounded-xl bg-period-lavender/20 p-1">
             <TabsTrigger 
               value="calendar"
               className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-period-accent data-[state=active]:shadow-sm flex items-center justify-center gap-2">
@@ -50,7 +51,13 @@ const Index = () => {
               value="stats" 
               className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-period-accent data-[state=active]:shadow-sm flex items-center justify-center gap-2">
               <Baby className="h-4 w-4" />
-              <span className="hidden md:inline">Cycle Stats</span>
+              <span className="hidden md:inline">Stats</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="health" 
+              className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-period-accent data-[state=active]:shadow-sm flex items-center justify-center gap-2">
+              <Apple className="h-4 w-4" />
+              <span className="hidden md:inline">Health</span>
             </TabsTrigger>
           </TabsList>
 
@@ -81,6 +88,12 @@ const Index = () => {
           <TabsContent value="stats" className="mx-auto mt-6 focus-visible:outline-none focus-visible:ring-0">
             <div className="bg-white rounded-2xl shadow-sm p-4">
               <CycleStats key={`stats-${key}`} />
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="health" className="mx-auto mt-6 focus-visible:outline-none focus-visible:ring-0">
+            <div className="bg-white rounded-2xl shadow-sm p-4">
+              <PeriodHealth date={selectedDate} />
             </div>
           </TabsContent>
         </Tabs>

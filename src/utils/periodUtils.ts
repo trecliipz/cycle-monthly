@@ -1,4 +1,3 @@
-
 import { addDays, format, isSameDay, parse, startOfDay, subDays } from "date-fns";
 
 // Types for our period tracker
@@ -163,6 +162,25 @@ export function predictNextPeriod(): { start: Date, end: Date } | null {
   };
 }
 
+// Calculate ovulation window (usually 11-21 days after period start)
+export function calculateOvulationWindow(): { start: Date, end: Date } | null {
+  const lastStart = getLastPeriodStartDate();
+  if (!lastStart) return null;
+  
+  const cycleLength = getCycleLength();
+  
+  // Ovulation typically happens 14 days before the next period starts
+  // We'll create a window of +/- 5 days around that time
+  const ovulationDay = addDays(lastStart, cycleLength - 14);
+  const ovulationStart = addDays(ovulationDay, -2);
+  const ovulationEnd = addDays(ovulationDay, 2);
+  
+  return {
+    start: ovulationStart,
+    end: ovulationEnd
+  };
+}
+
 // Check if a date is within a predicted period
 export function isDateInPredictedPeriod(date: Date): boolean {
   const prediction = predictNextPeriod();
@@ -171,6 +189,18 @@ export function isDateInPredictedPeriod(date: Date): boolean {
   const checkDate = startOfDay(date);
   const start = startOfDay(prediction.start);
   const end = startOfDay(prediction.end);
+  
+  return checkDate >= start && checkDate <= end;
+}
+
+// Check if a date is within the ovulation period
+export function isDateInOvulationPeriod(date: Date): boolean {
+  const ovulation = calculateOvulationWindow();
+  if (!ovulation) return false;
+  
+  const checkDate = startOfDay(date);
+  const start = startOfDay(ovulation.start);
+  const end = startOfDay(ovulation.end);
   
   return checkDate >= start && checkDate <= end;
 }
@@ -289,4 +319,68 @@ export function calculateAveragePeriodLength(): number {
   // Calculate average period length
   const totalLength = periods.reduce((sum, period) => sum + period.length, 0);
   return Math.round(totalLength / periods.length);
+}
+
+// Recommended foods based on cycle phase
+export function getFoodRecommendationsForPhase(date: Date = new Date()): string[] {
+  const prediction = predictNextPeriod();
+  const ovulation = calculateOvulationWindow();
+  
+  if (prediction && isDateInPredictedPeriod(date)) {
+    return [
+      "Iron-rich foods: leafy greens, red meat, beans",
+      "Anti-inflammatory foods: berries, fatty fish",
+      "Calcium-rich foods: yogurt, milk, cheese",
+      "Magnesium-rich foods: dark chocolate, nuts, seeds",
+      "Hydrating foods: water, herbal teas, fruits"
+    ];
+  } else if (ovulation && isDateInOvulationPeriod(date)) {
+    return [
+      "Zinc-rich foods: pumpkin seeds, oysters, beef",
+      "Antioxidant-rich foods: colorful vegetables, fruits",
+      "Light proteins: fish, chicken, tofu",
+      "Healthy fats: avocado, olive oil, nuts",
+      "Complex carbs: whole grains, sweet potatoes"
+    ];
+  } else {
+    return [
+      "B vitamin-rich foods: whole grains, eggs",
+      "Hormone-balancing foods: seeds, nuts",
+      "Fiber-rich foods: beans, lentils, fruits",
+      "Probiotic foods: yogurt, kimchi, sauerkraut",
+      "Lean proteins: chicken, fish, legumes"
+    ];
+  }
+}
+
+// Health tips based on cycle phase
+export function getHealthTipsForPhase(date: Date = new Date()): string[] {
+  const prediction = predictNextPeriod();
+  const ovulation = calculateOvulationWindow();
+  
+  if (prediction && isDateInPredictedPeriod(date)) {
+    return [
+      "Rest more and minimize strenuous exercise",
+      "Apply heat to lower abdomen for cramp relief",
+      "Stay hydrated to minimize bloating",
+      "Practice gentle yoga to ease discomfort",
+      "Consider supplements like magnesium and iron"
+    ];
+  } else if (ovulation && isDateInOvulationPeriod(date)) {
+    return [
+      "This is a great time for high-intensity workouts",
+      "Eat foods that support hormone production",
+      "Your energy is typically highest now",
+      "Focus on self-care and stress reduction",
+      "Stay hydrated as body temperature rises slightly"
+    ];
+  } else {
+    return [
+      "Focus on rebuilding energy with balanced meals",
+      "Moderate exercise like walking or swimming",
+      "Start introducing more iron-rich foods",
+      "Practice mindfulness to prepare for PMS symptoms",
+      "Get adequate sleep to support hormone balance"
+    ];
+  }
 }

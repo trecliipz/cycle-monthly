@@ -1,5 +1,4 @@
 
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -98,11 +97,23 @@
 
 @layer utilities {
   .period-dot {
-    @apply w-2 h-2 rounded-full bg-period-pink;
+    @apply w-2 h-2 rounded-full bg-rose-500;
   }
   
   .period-active {
-    @apply bg-period-highlight text-period-pink font-medium;
+    @apply bg-rose-100 text-rose-700 font-medium;
+  }
+  
+  .ovulation-dot {
+    @apply w-2 h-2 rounded-full bg-pink-400;
+  }
+  
+  .ovulation-light {
+    @apply bg-pink-100;
+  }
+  
+  .ovulation-text {
+    @apply text-pink-700;
   }
   
   .prediction-dot {
