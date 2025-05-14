@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { Input } from "@/components/ui/input";
 import { 
   Bell, 
   Moon, 
@@ -29,6 +30,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { getCycleLength, getPeriodLength, setCycleLength, setPeriodLength } from "@/utils/periodUtils";
 
 export default function SettingsPage() {
   const [periodReminder, setPeriodReminder] = useState(true);
@@ -37,9 +39,33 @@ export default function SettingsPage() {
   const [appLock, setAppLock] = useState(false);
   const [dataSharing, setDataSharing] = useState(false);
   const [biometricAuth, setBiometricAuth] = useState(false);
+  
+  // Add state for cycle and period length
+  const [cycleLength, setCycleLengthState] = useState(getCycleLength());
+  const [periodLength, setPeriodLengthState] = useState(getPeriodLength());
 
   const handleSave = () => {
     toast.success("Settings saved successfully");
+  };
+  
+  const handleCycleLengthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseInt(e.target.value, 10);
+    if (!isNaN(value) && value > 0) {
+      setCycleLengthState(value);
+    }
+  };
+  
+  const handlePeriodLengthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseInt(e.target.value, 10);
+    if (!isNaN(value) && value > 0) {
+      setPeriodLengthState(value);
+    }
+  };
+  
+  const saveCycleSettings = () => {
+    setCycleLength(cycleLength);
+    setPeriodLength(periodLength);
+    toast.success("Cycle settings saved");
   };
 
   return (
@@ -56,7 +82,7 @@ export default function SettingsPage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <Button variant="outline" className="w-full justify-between">
+          <Button variant="outline" className="w-full justify-between" onClick={() => toast.info("Profile settings coming soon")}>
             Account Details
             <ChevronRight className="h-4 w-4" />
           </Button>
@@ -79,7 +105,10 @@ export default function SettingsPage() {
             <Switch
               id="period-reminder"
               checked={periodReminder}
-              onCheckedChange={setPeriodReminder}
+              onCheckedChange={(checked) => {
+                setPeriodReminder(checked);
+                toast.info(`Period reminders ${checked ? "enabled" : "disabled"}`);
+              }}
             />
           </div>
           
@@ -91,7 +120,10 @@ export default function SettingsPage() {
             <Switch
               id="ovulation-reminder"
               checked={ovulationReminder}
-              onCheckedChange={setOvulationReminder}
+              onCheckedChange={(checked) => {
+                setOvulationReminder(checked);
+                toast.info(`Ovulation reminders ${checked ? "enabled" : "disabled"}`);
+              }}
             />
           </div>
         </CardContent>
@@ -104,10 +136,79 @@ export default function SettingsPage() {
             Cycle Settings
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <Button variant="outline" className="w-full justify-between">
-            Default Cycle Length
-            <span className="text-muted-foreground dark:text-gray-300">28 days</span>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="cycle-length">Default Cycle Length (days)</Label>
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="outline" 
+                className="h-9 w-9 p-0"
+                onClick={() => {
+                  if (cycleLength > 20) {
+                    setCycleLengthState(cycleLength - 1);
+                  }
+                }}
+              >-</Button>
+              <Input
+                id="cycle-length"
+                type="number"
+                value={cycleLength}
+                onChange={handleCycleLengthChange}
+                min={20}
+                max={40}
+                className="text-center"
+              />
+              <Button 
+                variant="outline" 
+                className="h-9 w-9 p-0"
+                onClick={() => {
+                  if (cycleLength < 40) {
+                    setCycleLengthState(cycleLength + 1);
+                  }
+                }}
+              >+</Button>
+            </div>
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="period-length">Default Period Length (days)</Label>
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="outline" 
+                className="h-9 w-9 p-0"
+                onClick={() => {
+                  if (periodLength > 1) {
+                    setPeriodLengthState(periodLength - 1);
+                  }
+                }}
+              >-</Button>
+              <Input
+                id="period-length"
+                type="number"
+                value={periodLength}
+                onChange={handlePeriodLengthChange}
+                min={1}
+                max={14}
+                className="text-center"
+              />
+              <Button 
+                variant="outline" 
+                className="h-9 w-9 p-0"
+                onClick={() => {
+                  if (periodLength < 14) {
+                    setPeriodLengthState(periodLength + 1);
+                  }
+                }}
+              >+</Button>
+            </div>
+          </div>
+          
+          <Button 
+            className="w-full" 
+            variant="default"
+            onClick={saveCycleSettings}
+          >
+            Save Cycle Settings
           </Button>
         </CardContent>
       </Card>
@@ -152,7 +253,10 @@ export default function SettingsPage() {
             <Switch
               id="app-lock"
               checked={appLock}
-              onCheckedChange={setAppLock}
+              onCheckedChange={(checked) => {
+                setAppLock(checked);
+                toast.info(`App lock ${checked ? "enabled" : "disabled"}`);
+              }}
             />
           </div>
           
@@ -164,7 +268,10 @@ export default function SettingsPage() {
             <Switch
               id="biometric-auth"
               checked={biometricAuth}
-              onCheckedChange={setBiometricAuth}
+              onCheckedChange={(checked) => {
+                setBiometricAuth(checked);
+                toast.info(`Biometric authentication ${checked ? "enabled" : "disabled"}`);
+              }}
             />
           </div>
 
@@ -176,7 +283,10 @@ export default function SettingsPage() {
             <Switch
               id="data-sharing"
               checked={dataSharing}
-              onCheckedChange={setDataSharing}
+              onCheckedChange={(checked) => {
+                setDataSharing(checked);
+                toast.info(`Data sharing ${checked ? "enabled" : "disabled"}`);
+              }}
             />
           </div>
           
@@ -318,7 +428,11 @@ export default function SettingsPage() {
             </DialogContent>
           </Dialog>
 
-          <Button variant="outline" className="w-full justify-between" onClick={() => toast.success("Support request sent! We'll get back to you soon.")}>
+          <Button 
+            variant="outline" 
+            className="w-full justify-between" 
+            onClick={() => toast.success("Support request sent! We'll get back to you soon.")}
+          >
             Contact Support
             <ChevronRight className="h-4 w-4" />
           </Button>
