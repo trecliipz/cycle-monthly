@@ -5,15 +5,38 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Bell, Moon, User, Lock, HelpCircle, ChevronRight, Clock, Sun } from "lucide-react";
+import { 
+  Bell, 
+  Moon, 
+  User, 
+  Lock, 
+  HelpCircle, 
+  ChevronRight, 
+  Clock, 
+  Sun, 
+  Shield, 
+  ShieldCheck, 
+  FileText, 
+  Info 
+} from "lucide-react";
 import { toast } from "sonner";
 import { useTheme } from "@/hooks/useTheme";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 export default function SettingsPage() {
   const [periodReminder, setPeriodReminder] = useState(true);
   const [ovulationReminder, setOvulationReminder] = useState(true);
   const { isDark, toggleTheme } = useTheme();
   const [appLock, setAppLock] = useState(false);
+  const [dataSharing, setDataSharing] = useState(false);
+  const [biometricAuth, setBiometricAuth] = useState(false);
 
   const handleSave = () => {
     toast.success("Settings saved successfully");
@@ -133,10 +156,115 @@ export default function SettingsPage() {
             />
           </div>
           
-          <Button variant="outline" className="w-full justify-between">
-            Privacy Policy
-            <ChevronRight className="h-4 w-4" />
-          </Button>
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label htmlFor="biometric-auth">Biometric Authentication</Label>
+              <p className="text-xs text-muted-foreground dark:text-gray-300">Use Face ID or fingerprint to unlock</p>
+            </div>
+            <Switch
+              id="biometric-auth"
+              checked={biometricAuth}
+              onCheckedChange={setBiometricAuth}
+            />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label htmlFor="data-sharing">Anonymous Data Sharing</Label>
+              <p className="text-xs text-muted-foreground dark:text-gray-300">Help improve the app by sharing anonymous usage data</p>
+            </div>
+            <Switch
+              id="data-sharing"
+              checked={dataSharing}
+              onCheckedChange={setDataSharing}
+            />
+          </div>
+          
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="w-full justify-between">
+                Privacy Policy
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <Shield className="h-5 w-5" /> Privacy Policy
+                </DialogTitle>
+                <DialogDescription>Last updated: May 14, 2025</DialogDescription>
+              </DialogHeader>
+              <div className="text-sm space-y-4">
+                <p>
+                  We are committed to protecting your personal information and your right to privacy. This Privacy Policy describes how we collect, use, and share your information when you use our period tracking app.
+                </p>
+                <h3 className="font-medium">Information We Collect</h3>
+                <p>
+                  We collect information that you provide directly to us, such as period dates, symptoms, moods, and other health data you choose to track. We also collect certain information automatically when you use our app, including device information and usage data.
+                </p>
+                <h3 className="font-medium">How We Use Your Information</h3>
+                <p>
+                  We use your information to provide and improve our services, personalize your experience, communicate with you, and develop new features. We may also use your information for research and analytics purposes, but only in an aggregated, anonymized form.
+                </p>
+                <h3 className="font-medium">How We Share Your Information</h3>
+                <p>
+                  We do not sell your personal information. We may share your information with third-party service providers who help us operate our app, but only as necessary to provide our services to you.
+                </p>
+                <h3 className="font-medium">Data Security</h3>
+                <p>
+                  We implement appropriate security measures to protect your personal information. However, no method of transmission over the Internet or electronic storage is 100% secure.
+                </p>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </CardContent>
+      </Card>
+
+      <Card className="bg-white shadow-sm dark:bg-gray-800 dark:text-gray-100">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <FileText className="h-5 w-5" />
+            Terms & Conditions
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="w-full justify-between">
+                Terms of Service
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5" /> Terms of Service
+                </DialogTitle>
+                <DialogDescription>Last updated: May 14, 2025</DialogDescription>
+              </DialogHeader>
+              <div className="text-sm space-y-4">
+                <p>
+                  By downloading or using the app, these terms will automatically apply to you – you should make sure therefore that you read them carefully before using the app.
+                </p>
+                <h3 className="font-medium">App Usage</h3>
+                <p>
+                  You're not allowed to copy or modify the app, any part of the app, or our trademarks in any way. You're not allowed to attempt to extract the source code of the app, and you also shouldn't try to translate the app into other languages or make derivative versions.
+                </p>
+                <h3 className="font-medium">Medical Disclaimer</h3>
+                <p>
+                  This app is not intended to be a substitute for professional medical advice, diagnosis, or treatment. Always seek the advice of your physician or other qualified health provider with any questions you may have regarding a medical condition.
+                </p>
+                <h3 className="font-medium">Changes to Terms</h3>
+                <p>
+                  We may update our Terms of Service from time to time. Thus, you are advised to review this page periodically for any changes. We will notify you of any changes by posting the new Terms of Service on this page.
+                </p>
+                <h3 className="font-medium">Contact Us</h3>
+                <p>
+                  If you have any questions or suggestions about our Terms of Service, do not hesitate to contact us at support@monthlyapp.com.
+                </p>
+              </div>
+            </DialogContent>
+          </Dialog>
         </CardContent>
       </Card>
 
@@ -148,18 +276,80 @@ export default function SettingsPage() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
-          <Button variant="outline" className="w-full justify-between">
-            FAQs
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-          <Button variant="outline" className="w-full justify-between">
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="w-full justify-between">
+                FAQs
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <HelpCircle className="h-5 w-5" /> Frequently Asked Questions
+                </DialogTitle>
+              </DialogHeader>
+              <div className="text-sm space-y-4">
+                <div>
+                  <h3 className="font-medium">How accurate are period predictions?</h3>
+                  <p className="mt-1">
+                    Period predictions become more accurate over time as the app learns your cycle patterns. Generally, after tracking for 3-4 cycles, predictions become more reliable.
+                  </p>
+                </div>
+                <div>
+                  <h3 className="font-medium">Is my data private?</h3>
+                  <p className="mt-1">
+                    Yes, we take your privacy seriously. Your data is encrypted and stored securely. We do not sell your personal information to third parties.
+                  </p>
+                </div>
+                <div>
+                  <h3 className="font-medium">Can I use this app for birth control?</h3>
+                  <p className="mt-1">
+                    This app is not intended to be used as a form of birth control. Please consult with a healthcare provider about reliable contraception methods.
+                  </p>
+                </div>
+                <div>
+                  <h3 className="font-medium">How do I backup my data?</h3>
+                  <p className="mt-1">
+                    You can enable automatic backups in your account settings. Your data will be securely stored in the cloud and can be restored if you change devices.
+                  </p>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          <Button variant="outline" className="w-full justify-between" onClick={() => toast.success("Support request sent! We'll get back to you soon.")}>
             Contact Support
             <ChevronRight className="h-4 w-4" />
           </Button>
-          <Button variant="outline" className="w-full justify-between">
-            About Monthly
-            <ChevronRight className="h-4 w-4" />
-          </Button>
+          
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="w-full justify-between">
+                About Monthly
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <Info className="h-5 w-5" /> About Monthly
+                </DialogTitle>
+              </DialogHeader>
+              <div className="text-sm space-y-4">
+                <p>
+                  Monthly is designed to help you track your menstrual cycle, predict future periods, and understand your body better. Our mission is to empower users with accurate information about their reproductive health.
+                </p>
+                <p>
+                  Our team of health experts and developers work together to provide a reliable, user-friendly period tracking experience.
+                </p>
+                <div className="pt-2">
+                  <p className="font-medium">Monthly v1.0.0</p>
+                  <p className="text-xs text-muted-foreground dark:text-gray-400 mt-1">© 2025 Monthly Health, Inc. All rights reserved.</p>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
         </CardContent>
       </Card>
 
