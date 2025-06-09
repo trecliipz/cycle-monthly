@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -31,18 +30,33 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { getCycleLength, getPeriodLength, setCycleLength, setPeriodLength } from "@/utils/periodUtils";
+import { getSettings, updateSetting, type AppSettings } from "@/utils/settingsUtils";
 
 export default function SettingsPage() {
-  const [periodReminder, setPeriodReminder] = useState(true);
-  const [ovulationReminder, setOvulationReminder] = useState(true);
   const { isDark, toggleTheme } = useTheme();
-  const [appLock, setAppLock] = useState(false);
-  const [dataSharing, setDataSharing] = useState(false);
-  const [biometricAuth, setBiometricAuth] = useState(false);
+  
+  // Load settings from localStorage on mount
+  const [settings, setSettings] = useState<AppSettings>(() => getSettings());
   
   // Add state for cycle and period length
   const [cycleLength, setCycleLengthState] = useState(getCycleLength());
   const [periodLength, setPeriodLengthState] = useState(getPeriodLength());
+
+  // Load settings when component mounts
+  useEffect(() => {
+    const loadedSettings = getSettings();
+    setSettings(loadedSettings);
+  }, []);
+
+  // Helper function to update a setting and persist it
+  const handleSettingChange = <K extends keyof AppSettings>(
+    key: K,
+    value: AppSettings[K]
+  ) => {
+    setSettings(prev => ({ ...prev, [key]: value }));
+    updateSetting(key, value);
+    toast.success("Setting saved");
+  };
 
   const handleSave = () => {
     toast.success("Settings saved successfully");
@@ -114,9 +128,9 @@ export default function SettingsPage() {
             </div>
             <Switch
               id="period-reminder"
-              checked={periodReminder}
+              checked={settings.periodReminder}
               onCheckedChange={(checked) => {
-                setPeriodReminder(checked);
+                handleSettingChange('periodReminder', checked);
                 toast.info(`Period reminders ${checked ? "enabled" : "disabled"}`);
               }}
             />
@@ -129,9 +143,9 @@ export default function SettingsPage() {
             </div>
             <Switch
               id="ovulation-reminder"
-              checked={ovulationReminder}
+              checked={settings.ovulationReminder}
               onCheckedChange={(checked) => {
-                setOvulationReminder(checked);
+                handleSettingChange('ovulationReminder', checked);
                 toast.info(`Ovulation reminders ${checked ? "enabled" : "disabled"}`);
               }}
             />
@@ -265,9 +279,9 @@ export default function SettingsPage() {
             </div>
             <Switch
               id="app-lock"
-              checked={appLock}
+              checked={settings.appLock}
               onCheckedChange={(checked) => {
-                setAppLock(checked);
+                handleSettingChange('appLock', checked);
                 toast.info(`App lock ${checked ? "enabled" : "disabled"}`);
               }}
             />
@@ -280,9 +294,9 @@ export default function SettingsPage() {
             </div>
             <Switch
               id="biometric-auth"
-              checked={biometricAuth}
+              checked={settings.biometricAuth}
               onCheckedChange={(checked) => {
-                setBiometricAuth(checked);
+                handleSettingChange('biometricAuth', checked);
                 toast.info(`Biometric authentication ${checked ? "enabled" : "disabled"}`);
               }}
             />
@@ -295,9 +309,9 @@ export default function SettingsPage() {
             </div>
             <Switch
               id="data-sharing"
-              checked={dataSharing}
+              checked={settings.dataSharing}
               onCheckedChange={(checked) => {
-                setDataSharing(checked);
+                handleSettingChange('dataSharing', checked);
                 toast.info(`Data sharing ${checked ? "enabled" : "disabled"}`);
               }}
             />
