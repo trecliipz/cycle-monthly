@@ -1,9 +1,10 @@
+
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { formatDateForDisplay, getCycleLength, getPeriodLength, getLastPeriodStartDate, predictNextPeriod, setCycleLength, setPeriodLength, calculateAverageCycleLength, calculateAveragePeriodLength, savePeriodDay, getDefaultPeriodDay, FlowIntensity } from "@/utils/periodUtils";
+import { formatDateForDisplay, getCycleLength, getPeriodLength, getLastPeriodStartDate, predictNextPeriod, setCycleLength, setPeriodLength, calculateAveragePeriodLength, savePeriodDay, getDefaultPeriodDay, FlowIntensity } from "@/utils/periodUtils";
 import { Calendar as CalendarIcon, Settings } from "lucide-react";
 import { format } from "date-fns";
 import { Link } from "react-router-dom";
