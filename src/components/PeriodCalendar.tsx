@@ -3,15 +3,13 @@ import { useState, useEffect } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import {
-  hasDataForDate,
   isDateInPredictedPeriod,
   isDateInOvulationPeriod,
   predictNextPeriod,
-  getDataForDate,
   getPeriodLength,
   getLastPeriodStartDate
 } from "@/utils/periodUtils";
-import { addDays, isSameDay, startOfDay } from "date-fns";
+import { addDays, startOfDay } from "date-fns";
 
 interface PeriodCalendarProps {
   selectedDate: Date | undefined;
@@ -42,12 +40,6 @@ export function PeriodCalendar({
   
   // Get prediction information (will recalculate when key changes)
   const prediction = predictNextPeriod();
-  
-  // Helper function to check if a date has period flow data
-  const hasActualPeriodFlow = (date: Date): boolean => {
-    const data = getDataForDate(date);
-    return data ? data.flow !== "none" : false;
-  };
 
   // Helper function to check if a date is within the current period based on last period start and period length
   const isDateInCurrentPeriod = (date: Date): boolean => {
@@ -68,16 +60,6 @@ export function PeriodCalendar({
         {`
           .rdp-day {
             position: relative;
-          }
-          
-          .period-day {
-            background-color: #fef2f2 !important;
-            color: #b91c1c !important;
-            border-radius: 6px;
-          }
-          
-          .period-day:hover {
-            background-color: #fee2e2 !important;
           }
           
           .current-period-day {
@@ -110,7 +92,6 @@ export function PeriodCalendar({
             background-color: #fce7f3 !important;
           }
           
-          .period-day::after,
           .current-period-day::after {
             content: '';
             position: absolute;
@@ -158,13 +139,11 @@ export function PeriodCalendar({
         month={month}
         className={cn("rounded-md border shadow p-3 pointer-events-auto", className)}
         modifiers={{
-          period: (date) => hasActualPeriodFlow(date),
-          currentPeriod: (date) => !hasActualPeriodFlow(date) && isDateInCurrentPeriod(date),
+          currentPeriod: (date) => isDateInCurrentPeriod(date),
           ovulation: (date) => isDateInOvulationPeriod(date),
           prediction: (date) => prediction ? isDateInPredictedPeriod(date) : false,
         }}
         modifiersClassNames={{
-          period: "period-day",
           currentPeriod: "current-period-day",
           ovulation: "ovulation-day", 
           prediction: "prediction-day",
@@ -174,12 +153,8 @@ export function PeriodCalendar({
       <div className="text-sm text-muted-foreground">
         <div className="flex flex-wrap gap-4">
           <div className="flex items-center">
-            <div className="w-3 h-3 rounded-full bg-red-500 mr-2"></div>
-            <span>Period (logged)</span>
-          </div>
-          <div className="flex items-center">
             <div className="w-3 h-3 rounded-full bg-red-400 mr-2"></div>
-            <span>Period (current)</span>
+            <span>Current Period</span>
           </div>
           <div className="flex items-center">
             <div className="w-3 h-3 rounded-full bg-orange-500 mr-2"></div>
