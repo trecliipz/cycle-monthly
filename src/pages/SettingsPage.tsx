@@ -65,10 +65,12 @@ export default function SettingsPage() {
     setCycleLength(cycleLength);
     setPeriodLength(periodLength);
     
-    // Trigger a page refresh to update calendar predictions
-    window.dispatchEvent(new CustomEvent('cycleSettingsUpdated'));
+    // Trigger a page refresh to update calendar predictions and insights
+    setTimeout(() => {
+      window.dispatchEvent(new CustomEvent('cycleSettingsUpdated'));
+    }, 100);
     
-    toast.success("Cycle settings saved - calendar updated with new predictions");
+    toast.success("Cycle settings saved - all predictions updated");
   };
 
   return (
@@ -138,6 +140,9 @@ export default function SettingsPage() {
             <Clock className="h-5 w-5" />
             Cycle Settings
           </CardTitle>
+          <CardDescription>
+            These settings will be used across all predictions and analysis
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
