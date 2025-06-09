@@ -1,4 +1,5 @@
-import { addDays, format, isSameDay, parse, startOfDay, subDays } from "date-fns";
+
+import { addDays, format, isSameDay, parse, startOfDay, subDays, differenceInDays } from "date-fns";
 
 // Types for our period tracker
 export interface PeriodDay {
@@ -12,6 +13,28 @@ export interface PeriodSymptoms {
   headache: SymptomIntensity;
   mood: Mood;
   notes: string;
+}
+
+export interface CycleAnalytics {
+  averageCycleLength: number;
+  minCycleLength: number;
+  maxCycleLength: number;
+  isRegular: boolean;
+  regularityScore: number;
+  totalCycles: number;
+  averagePeriodLength: number;
+  predictionConfidence: number;
+}
+
+export interface PredictionData {
+  nextPeriodStart: Date;
+  nextPeriodEnd: Date;
+  nextOvulation: Date;
+  fertileWindowStart: Date;
+  fertileWindowEnd: Date;
+  daysUntilPeriod: number;
+  daysUntilOvulation: number;
+  confidence: 'low' | 'medium' | 'high';
 }
 
 export enum SymptomIntensity {
@@ -47,6 +70,11 @@ const MANUAL_PERIOD_START_KEY = "period_tracker_manual_start";
 const DEFAULT_CYCLE_LENGTH = 28;
 const DEFAULT_PERIOD_LENGTH = 5;
 
+// Validation constants
+const MIN_CYCLE_LENGTH = 15;
+const MAX_CYCLE_LENGTH = 45;
+const REGULARITY_THRESHOLD = 3; // ±3 days for regular cycles
+
 // Get stored period days
 export function getPeriodHistory(): PeriodDay[] {
   const storedData = localStorage.getItem(PERIOD_HISTORY_KEY);
@@ -65,7 +93,7 @@ export function getPeriodHistory(): PeriodDay[] {
   }
 }
 
-// Save period day
+// Save period day with validation
 export function savePeriodDay(periodDay: PeriodDay): void {
   const history = getPeriodHistory();
   
@@ -88,6 +116,98 @@ export function savePeriodDay(periodDay: PeriodDay): void {
   localStorage.setItem(PERIOD_HISTORY_KEY, JSON.stringify(history));
 }
 
+// Get all period start dates from history
+export function getPeriodStartDates(): Date[] {
+  const history = getPeriodHistory();
+  const periodStarts: Date[] = [];
+  
+  // Sort history by date ascending
+  const sortedHistory = [...history].sort((a, b) => a.date.getTime() - b.date.getTime());
+  
+  let inPeriod = false;
+  
+  for (const day of sortedHistory) {
+    if (day.flow !== FlowIntensity.None) {
+      if (!inPeriod) {
+        // This is a new period start
+        periodStarts.push(day.date);
+        inPeriod = true;
+      }
+    } else {
+      inPeriod = false;
+    }
+  }
+  
+  return periodStarts;
+}
+
+// Calculate cycle lengths between consecutive periods
+export function getCycleLengths(): number[] {
+  const periodStarts = getPeriodStartDates();
+  if (periodStarts.length < 2) return [];
+  
+  const cycleLengths: number[] = [];
+  
+  for (let i = 1; i < periodStarts.length; i++) {
+    const cycleLength = differenceInDays(periodStarts[i], periodStarts[i - 1]);
+    
+    // Filter out unrealistic cycles
+    if (cycleLength >= MIN_CYCLE_LENGTH && cycleLength <= MAX_CYCLE_LENGTH) {
+      cycleLengths.push(cycleLength);
+    }
+  }
+  
+  return cycleLengths;
+}
+
+// Enhanced cycle analytics
+export function getCycleAnalytics(): CycleAnalytics {
+  const cycleLengths = getCycleLengths();
+  const periodStarts = getPeriodStartDates();
+  
+  if (cycleLengths.length === 0) {
+    return {
+      averageCycleLength: DEFAULT_CYCLE_LENGTH,
+      minCycleLength: DEFAULT_CYCLE_LENGTH,
+      maxCycleLength: DEFAULT_CYCLE_LENGTH,
+      isRegular: false,
+      regularityScore: 0,
+      totalCycles: 0,
+      averagePeriodLength: DEFAULT_PERIOD_LENGTH,
+      predictionConfidence: 0
+    };
+  }
+  
+  const averageCycleLength = Math.round(cycleLengths.reduce((sum, length) => sum + length, 0) / cycleLengths.length);
+  const minCycleLength = Math.min(...cycleLengths);
+  const maxCycleLength = Math.max(...cycleLengths);
+  
+  // Calculate regularity - cycles within ±3 days of average are considered regular
+  const regularCycles = cycleLengths.filter(length => 
+    Math.abs(length - averageCycleLength) <= REGULARITY_THRESHOLD
+  ).length;
+  
+  const regularityScore = cycleLengths.length > 0 ? (regularCycles / cycleLengths.length) * 100 : 0;
+  const isRegular = regularityScore >= 70; // 70% of cycles within threshold
+  
+  // Calculate prediction confidence based on data quality
+  let predictionConfidence = 0;
+  if (cycleLengths.length >= 3) {
+    predictionConfidence = Math.min(100, (cycleLengths.length * 20) + (regularityScore * 0.5));
+  }
+  
+  return {
+    averageCycleLength,
+    minCycleLength,
+    maxCycleLength,
+    isRegular,
+    regularityScore: Math.round(regularityScore),
+    totalCycles: cycleLengths.length,
+    averagePeriodLength: calculateAveragePeriodLength(),
+    predictionConfidence: Math.round(predictionConfidence)
+  };
+}
+
 // Set manual period start date
 export function setManualPeriodStartDate(date: Date): void {
   localStorage.setItem(MANUAL_PERIOD_START_KEY, date.toISOString());
@@ -104,10 +224,10 @@ export function clearManualPeriodStartDate(): void {
   localStorage.removeItem(MANUAL_PERIOD_START_KEY);
 }
 
-// Get cycle length (avg or default)
+// Get cycle length (enhanced with analytics)
 export function getCycleLength(): number {
-  const stored = localStorage.getItem(CYCLE_LENGTH_KEY);
-  return stored ? parseInt(stored, 10) : DEFAULT_CYCLE_LENGTH;
+  const analytics = getCycleAnalytics();
+  return analytics.averageCycleLength;
 }
 
 // Set cycle length
@@ -115,10 +235,10 @@ export function setCycleLength(days: number): void {
   localStorage.setItem(CYCLE_LENGTH_KEY, days.toString());
 }
 
-// Get period length (avg or default)
+// Get period length (enhanced)
 export function getPeriodLength(): number {
-  const stored = localStorage.getItem(PERIOD_LENGTH_KEY);
-  return stored ? parseInt(stored, 10) : DEFAULT_PERIOD_LENGTH;
+  const analytics = getCycleAnalytics();
+  return analytics.averagePeriodLength;
 }
 
 // Set period length
@@ -126,7 +246,7 @@ export function setPeriodLength(days: number): void {
   localStorage.setItem(PERIOD_LENGTH_KEY, days.toString());
 }
 
-// Get last period start date (prioritize manual setting over calculated)
+// Get last period start date (enhanced)
 export function getLastPeriodStartDate(): Date | null {
   // First check if there's a manually set start date
   const manualStart = getManualPeriodStartDate();
@@ -134,70 +254,72 @@ export function getLastPeriodStartDate(): Date | null {
     return manualStart;
   }
   
-  // Fall back to calculated start date from history
-  const history = getPeriodHistory();
-  if (history.length === 0) return null;
-  
-  // Sort by date descending to find the most recent period
-  const periodDaysWithFlow = history
-    .filter(day => day.flow !== FlowIntensity.None)
-    .sort((a, b) => b.date.getTime() - a.date.getTime());
-  
-  if (periodDaysWithFlow.length === 0) return null;
-  
-  // Get the most recent period start date
-  // We need to find the first day of the most recent period
-  const mostRecentDay = periodDaysWithFlow[0];
-  let consecutiveDays = [mostRecentDay];
-  
-  // Go backwards from most recent day to find consecutive period days
-  for (let i = 1; i < periodDaysWithFlow.length; i++) {
-    const currentDay = periodDaysWithFlow[i];
-    const previousDay = consecutiveDays[consecutiveDays.length - 1];
-    
-    // Check if this day is consecutive to our period
-    const dayDifference = (previousDay.date.getTime() - currentDay.date.getTime()) / (1000 * 60 * 60 * 24);
-    
-    if (dayDifference === 1) {
-      consecutiveDays.push(currentDay);
-    } else {
-      break;
-    }
-  }
-  
-  // The start date is the last item in our consecutiveDays array (oldest date)
-  return consecutiveDays[consecutiveDays.length - 1].date;
+  // Get from calculated period starts
+  const periodStarts = getPeriodStartDates();
+  return periodStarts.length > 0 ? periodStarts[periodStarts.length - 1] : null;
 }
 
-// Predict next period
-export function predictNextPeriod(): { start: Date, end: Date } | null {
+// Enhanced prediction with confidence levels
+export function getEnhancedPrediction(): PredictionData | null {
   const lastStart = getLastPeriodStartDate();
   if (!lastStart) return null;
   
-  const cycleLength = getCycleLength();
-  const periodLength = getPeriodLength();
+  const analytics = getCycleAnalytics();
+  const cycleLength = analytics.averageCycleLength;
+  const periodLength = analytics.averagePeriodLength;
   
-  const nextStart = addDays(lastStart, cycleLength);
-  const nextEnd = addDays(nextStart, periodLength - 1);
+  // Calculate next period
+  const nextPeriodStart = addDays(lastStart, cycleLength);
+  const nextPeriodEnd = addDays(nextPeriodStart, periodLength - 1);
+  
+  // Calculate ovulation (14 days before next period)
+  const nextOvulation = addDays(nextPeriodStart, -14);
+  
+  // Calculate fertile window (5 days before ovulation + ovulation day)
+  const fertileWindowStart = addDays(nextOvulation, -5);
+  const fertileWindowEnd = nextOvulation;
+  
+  // Calculate days until events
+  const today = new Date();
+  const daysUntilPeriod = Math.max(0, differenceInDays(nextPeriodStart, today));
+  const daysUntilOvulation = Math.max(0, differenceInDays(nextOvulation, today));
+  
+  // Determine confidence level
+  let confidence: 'low' | 'medium' | 'high' = 'low';
+  if (analytics.predictionConfidence >= 70) confidence = 'high';
+  else if (analytics.predictionConfidence >= 40) confidence = 'medium';
   
   return {
-    start: nextStart,
-    end: nextEnd
+    nextPeriodStart,
+    nextPeriodEnd,
+    nextOvulation,
+    fertileWindowStart,
+    fertileWindowEnd,
+    daysUntilPeriod,
+    daysUntilOvulation,
+    confidence
   };
 }
 
-// Calculate ovulation window (usually 11-21 days after period start)
+// Legacy function for backward compatibility
+export function predictNextPeriod(): { start: Date, end: Date } | null {
+  const prediction = getEnhancedPrediction();
+  if (!prediction) return null;
+  
+  return {
+    start: prediction.nextPeriodStart,
+    end: prediction.nextPeriodEnd
+  };
+}
+
+// Enhanced ovulation calculation
 export function calculateOvulationWindow(): { start: Date, end: Date } | null {
-  const lastStart = getLastPeriodStartDate();
-  if (!lastStart) return null;
+  const prediction = getEnhancedPrediction();
+  if (!prediction) return null;
   
-  const cycleLength = getCycleLength();
-  
-  // Ovulation typically happens 14 days before the next period starts
-  // We'll create a window of +/- 5 days around that time
-  const ovulationDay = addDays(lastStart, cycleLength - 14);
-  const ovulationStart = addDays(ovulationDay, -2);
-  const ovulationEnd = addDays(ovulationDay, 2);
+  // Create a 5-day window around ovulation
+  const ovulationStart = addDays(prediction.nextOvulation, -2);
+  const ovulationEnd = addDays(prediction.nextOvulation, 2);
   
   return {
     start: ovulationStart,
@@ -205,23 +327,14 @@ export function calculateOvulationWindow(): { start: Date, end: Date } | null {
   };
 }
 
-// Calculate fertile window (usually 6 days - 5 days before ovulation + ovulation day)
+// Enhanced fertile window calculation
 export function calculateFertileWindow(): { start: Date, end: Date } | null {
-  const lastStart = getLastPeriodStartDate();
-  if (!lastStart) return null;
-  
-  const cycleLength = getCycleLength();
-  
-  // Ovulation typically happens 14 days before the next period starts
-  const ovulationDay = addDays(lastStart, cycleLength - 14);
-  
-  // Fertile window is typically 5 days before ovulation + ovulation day
-  const fertileStart = addDays(ovulationDay, -5);
-  const fertileEnd = ovulationDay;
+  const prediction = getEnhancedPrediction();
+  if (!prediction) return null;
   
   return {
-    start: fertileStart,
-    end: fertileEnd
+    start: prediction.fertileWindowStart,
+    end: prediction.fertileWindowEnd
   };
 }
 
@@ -274,7 +387,7 @@ export function getDataForDate(date: Date): PeriodDay | null {
   return found || null;
 }
 
-// Check if today is a period day (predicted or actual)
+// Enhanced period day detection
 export function isTodayPeriodDay(): boolean {
   const today = new Date();
   
@@ -288,13 +401,13 @@ export function isTodayPeriodDay(): boolean {
   return isDateInPredictedPeriod(today);
 }
 
-// Get current cycle day
+// Enhanced current cycle day calculation
 export function getCurrentCycleDay(): number | null {
   const lastStart = getLastPeriodStartDate();
   if (!lastStart) return null;
   
   const today = new Date();
-  const daysSinceLastPeriod = Math.floor((today.getTime() - lastStart.getTime()) / (1000 * 60 * 60 * 24));
+  const daysSinceLastPeriod = differenceInDays(today, lastStart);
   
   return daysSinceLastPeriod + 1; // Add 1 because day 1 is the first day of the period
 }
@@ -318,46 +431,7 @@ export function getDefaultPeriodDay(date: Date): PeriodDay {
   };
 }
 
-// Calculate average cycle length from history
-export function calculateAverageCycleLength(): number {
-  const history = getPeriodHistory();
-  if (history.length < 2) return DEFAULT_CYCLE_LENGTH;
-  
-  // Find all period start dates
-  const periodStarts: Date[] = [];
-  let currentPeriodDays: PeriodDay[] = [];
-  
-  // Sort history by date ascending
-  const sortedHistory = [...history].sort((a, b) => a.date.getTime() - b.date.getTime());
-  
-  for (let i = 0; i < sortedHistory.length; i++) {
-    const day = sortedHistory[i];
-    
-    if (day.flow !== FlowIntensity.None) {
-      if (currentPeriodDays.length === 0) {
-        // This is a new period start
-        periodStarts.push(day.date);
-      }
-      currentPeriodDays.push(day);
-    } else if (currentPeriodDays.length > 0) {
-      // End of a period
-      currentPeriodDays = [];
-    }
-  }
-  
-  if (periodStarts.length < 2) return DEFAULT_CYCLE_LENGTH;
-  
-  // Calculate differences between consecutive period starts
-  let totalDays = 0;
-  for (let i = 1; i < periodStarts.length; i++) {
-    const diff = (periodStarts[i].getTime() - periodStarts[i-1].getTime()) / (1000 * 60 * 60 * 24);
-    totalDays += diff;
-  }
-  
-  return Math.round(totalDays / (periodStarts.length - 1));
-}
-
-// Calculate average period length from history
+// Calculate average period length from history (enhanced)
 export function calculateAveragePeriodLength(): number {
   const history = getPeriodHistory();
   if (history.length === 0) return DEFAULT_PERIOD_LENGTH;
@@ -378,7 +452,7 @@ export function calculateAveragePeriodLength(): number {
       currentPeriod.push(day);
     } else {
       const lastDay = currentPeriod[currentPeriod.length - 1];
-      const dayDifference = (day.date.getTime() - lastDay.date.getTime()) / (1000 * 60 * 60 * 24);
+      const dayDifference = differenceInDays(day.date, lastDay.date);
       
       if (dayDifference === 1) {
         // Consecutive day
@@ -397,15 +471,19 @@ export function calculateAveragePeriodLength(): number {
   
   if (periods.length === 0) return DEFAULT_PERIOD_LENGTH;
   
+  // Filter out unrealistic period lengths (1-10 days)
+  const validPeriods = periods.filter(period => period.length >= 1 && period.length <= 10);
+  
+  if (validPeriods.length === 0) return DEFAULT_PERIOD_LENGTH;
+  
   // Calculate average period length
-  const totalLength = periods.reduce((sum, period) => sum + period.length, 0);
-  return Math.round(totalLength / periods.length);
+  const totalLength = validPeriods.reduce((sum, period) => sum + period.length, 0);
+  return Math.round(totalLength / validPeriods.length);
 }
 
-// Recommended foods based on cycle phase
+// Recommended foods based on cycle phase (enhanced)
 export function getFoodRecommendationsForPhase(date: Date = new Date()): string[] {
-  const prediction = predictNextPeriod();
-  const ovulation = calculateOvulationWindow();
+  const prediction = getEnhancedPrediction();
   
   if (prediction && isDateInPredictedPeriod(date)) {
     return [
@@ -415,13 +493,21 @@ export function getFoodRecommendationsForPhase(date: Date = new Date()): string[
       "Magnesium-rich foods: dark chocolate, nuts, seeds",
       "Hydrating foods: water, herbal teas, fruits"
     ];
-  } else if (ovulation && isDateInOvulationPeriod(date)) {
+  } else if (prediction && isDateInOvulationPeriod(date)) {
     return [
       "Zinc-rich foods: pumpkin seeds, oysters, beef",
       "Antioxidant-rich foods: colorful vegetables, fruits",
       "Light proteins: fish, chicken, tofu",
       "Healthy fats: avocado, olive oil, nuts",
       "Complex carbs: whole grains, sweet potatoes"
+    ];
+  } else if (prediction && isDateInFertileWindow(date)) {
+    return [
+      "Folate-rich foods: spinach, asparagus, lentils",
+      "Omega-3 fatty acids: salmon, walnuts, chia seeds",
+      "Vitamin E: almonds, sunflower seeds",
+      "Coenzyme Q10: organ meats, broccoli",
+      "Whole grains: quinoa, brown rice, oats"
     ];
   } else {
     return [
@@ -434,10 +520,9 @@ export function getFoodRecommendationsForPhase(date: Date = new Date()): string[
   }
 }
 
-// Health tips based on cycle phase
+// Health tips based on cycle phase (enhanced)
 export function getHealthTipsForPhase(date: Date = new Date()): string[] {
-  const prediction = predictNextPeriod();
-  const ovulation = calculateOvulationWindow();
+  const prediction = getEnhancedPrediction();
   
   if (prediction && isDateInPredictedPeriod(date)) {
     return [
@@ -447,13 +532,21 @@ export function getHealthTipsForPhase(date: Date = new Date()): string[] {
       "Practice gentle yoga to ease discomfort",
       "Consider supplements like magnesium and iron"
     ];
-  } else if (ovulation && isDateInOvulationPeriod(date)) {
+  } else if (prediction && isDateInOvulationPeriod(date)) {
     return [
       "This is a great time for high-intensity workouts",
       "Eat foods that support hormone production",
       "Your energy is typically highest now",
       "Focus on self-care and stress reduction",
       "Stay hydrated as body temperature rises slightly"
+    ];
+  } else if (prediction && isDateInFertileWindow(date)) {
+    return [
+      "Optimal time for conception if trying to conceive",
+      "Maintain regular exercise routine",
+      "Track basal body temperature for accuracy",
+      "Reduce stress through meditation or gentle activities",
+      "Ensure adequate sleep for hormone balance"
     ];
   } else {
     return [
