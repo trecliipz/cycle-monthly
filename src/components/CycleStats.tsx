@@ -4,18 +4,33 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { formatDateForDisplay, getCycleLength, getPeriodLength, getLastPeriodStartDate, predictNextPeriod, setCycleLength, setPeriodLength, calculateAverageCycleLength, calculateAveragePeriodLength } from "@/utils/periodUtils";
+import { formatDateForDisplay, getCycleLength, getPeriodLength, getLastPeriodStartDate, predictNextPeriod, setCycleLength, setPeriodLength, calculateAverageCycleLength, calculateAveragePeriodLength, savePeriodDay, getDefaultPeriodDay, FlowIntensity } from "@/utils/periodUtils";
 import { Calendar as CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
 
 export function CycleStats() {
   const [cycleLength, setCycleLengthState] = useState(getCycleLength());
   const [periodLength, setPeriodLengthState] = useState(getPeriodLength());
+  const [periodStartDate, setPeriodStartDate] = useState("");
   const [lastPeriodDate, setLastPeriodDate] = useState<Date | null>(null);
   const [nextPeriodDates, setNextPeriodDates] = useState<{ start: Date, end: Date } | null>(null);
+  const [key, setKey] = useState(0);
   
   useEffect(() => {
-    // Update stats when component mounts
     refreshStats();
+  }, [key]);
+
+  // Listen for cycle settings updates
+  useEffect(() => {
+    const handleCycleUpdate = () => {
+      setKey(prev => prev + 1);
+    };
+
+    window.addEventListener('cycleSettingsUpdated', handleCycleUpdate);
+    
+    return () => {
+      window.removeEventListener('cycleSettingsUpdated', handleCycleUpdate);
+    };
   }, []);
   
   const refreshStats = () => {
@@ -53,11 +68,39 @@ export function CycleStats() {
       setPeriodLengthState(value);
     }
   };
+
+  const handlePeriodStartDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPeriodStartDate(e.target.value);
+  };
   
   const handleSaveSettings = () => {
     setCycleLength(cycleLength);
     setPeriodLength(periodLength);
+    
+    // Save period start date if provided
+    if (periodStartDate) {
+      const startDate = new Date(periodStartDate);
+      if (!isNaN(startDate.getTime())) {
+        // Create period days for the specified period length
+        for (let i = 0; i < periodLength; i++) {
+          const periodDate = new Date(startDate);
+          periodDate.setDate(startDate.getDate() + i);
+          
+          const periodDay = {
+            ...getDefaultPeriodDay(periodDate),
+            flow: i === 0 ? FlowIntensity.Heavy : (i < 2 ? FlowIntensity.Medium : FlowIntensity.Light)
+          };
+          
+          savePeriodDay(periodDay);
+        }
+        setPeriodStartDate("");
+      }
+    }
+    
     refreshStats();
+    
+    // Dispatch event to update other components
+    window.dispatchEvent(new CustomEvent('cycleSettingsUpdated'));
   };
   
   return (
@@ -95,6 +138,18 @@ export function CycleStats() {
               className="w-full"
             />
           </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="period-start-date">Last Period Start Date</Label>
+          <Input
+            id="period-start-date"
+            type="date"
+            value={periodStartDate}
+            onChange={handlePeriodStartDateChange}
+            className="w-full"
+            placeholder="Select start date"
+          />
         </div>
         
         <Button 

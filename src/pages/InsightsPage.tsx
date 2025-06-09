@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -6,6 +5,21 @@ import { BarChart, Calendar, Activity } from "lucide-react";
 import { CycleStats } from "@/components/CycleStats";
 
 export default function InsightsPage() {
+  const [key, setKey] = useState(0);
+
+  // Listen for cycle settings updates
+  useEffect(() => {
+    const handleCycleUpdate = () => {
+      setKey(prev => prev + 1);
+    };
+
+    window.addEventListener('cycleSettingsUpdated', handleCycleUpdate);
+    
+    return () => {
+      window.removeEventListener('cycleSettingsUpdated', handleCycleUpdate);
+    };
+  }, []);
+
   return (
     <div className="flex flex-col pb-20 px-4 space-y-5">
       <header className="mt-6 mb-2">
@@ -40,7 +54,7 @@ export default function InsightsPage() {
               <CardTitle className="text-lg">Cycle Analysis</CardTitle>
             </CardHeader>
             <CardContent>
-              <CycleStats />
+              <CycleStats key={`stats-${key}`} />
             </CardContent>
           </Card>
         </TabsContent>
