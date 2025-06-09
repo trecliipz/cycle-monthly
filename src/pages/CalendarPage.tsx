@@ -1,11 +1,12 @@
+
 import { useState, useEffect } from "react";
 import { PeriodCalendar } from "@/components/PeriodCalendar";
 import { PeriodForm } from "@/components/PeriodForm";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Pencil } from "lucide-react";
+import { Pencil, Calendar as CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
-import { getDataForDate } from "@/utils/periodUtils";
+import { getDataForDate, setManualPeriodStartDate } from "@/utils/periodUtils";
 
 export default function CalendarPage() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -22,6 +23,13 @@ export default function CalendarPage() {
   const handlePeriodSaved = () => {
     setKey(prev => prev + 1);
     setShowForm(false);
+  };
+
+  const handleSetPeriodStart = () => {
+    setManualPeriodStartDate(selectedDate);
+    // Dispatch event to update all components
+    window.dispatchEvent(new CustomEvent('cycleSettingsUpdated'));
+    setKey(prev => prev + 1);
   };
 
   // Listen for cycle settings updates
@@ -59,15 +67,26 @@ export default function CalendarPage() {
           <div className="flex flex-col space-y-4">
             <div className="flex justify-between items-center">
               <h2 className="text-lg font-medium">{format(selectedDate, 'MMMM d, yyyy')}</h2>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => setShowForm(true)}
-                className="text-period-accent hover:bg-period-lavender/20"
-              >
-                <Pencil className="h-4 w-4 mr-1" />
-                {periodData ? "Edit" : "Log"}
-              </Button>
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleSetPeriodStart}
+                  className="text-period-accent border-period-accent hover:bg-period-lavender/20"
+                >
+                  <CalendarIcon className="h-4 w-4 mr-1" />
+                  Set as Period Start
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setShowForm(true)}
+                  className="text-period-accent hover:bg-period-lavender/20"
+                >
+                  <Pencil className="h-4 w-4 mr-1" />
+                  {periodData ? "Edit" : "Log"}
+                </Button>
+              </div>
             </div>
             
             {periodData ? (

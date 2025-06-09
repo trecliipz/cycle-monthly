@@ -1,4 +1,3 @@
-
 import { addDays, format, isSameDay, parse, startOfDay, subDays } from "date-fns";
 
 // Types for our period tracker
@@ -42,6 +41,7 @@ export enum Mood {
 const PERIOD_HISTORY_KEY = "period_tracker_history";
 const CYCLE_LENGTH_KEY = "period_tracker_cycle_length";
 const PERIOD_LENGTH_KEY = "period_tracker_period_length";
+const MANUAL_PERIOD_START_KEY = "period_tracker_manual_start";
 
 // Default values
 const DEFAULT_CYCLE_LENGTH = 28;
@@ -88,6 +88,22 @@ export function savePeriodDay(periodDay: PeriodDay): void {
   localStorage.setItem(PERIOD_HISTORY_KEY, JSON.stringify(history));
 }
 
+// Set manual period start date
+export function setManualPeriodStartDate(date: Date): void {
+  localStorage.setItem(MANUAL_PERIOD_START_KEY, date.toISOString());
+}
+
+// Get manual period start date
+export function getManualPeriodStartDate(): Date | null {
+  const stored = localStorage.getItem(MANUAL_PERIOD_START_KEY);
+  return stored ? new Date(stored) : null;
+}
+
+// Clear manual period start date
+export function clearManualPeriodStartDate(): void {
+  localStorage.removeItem(MANUAL_PERIOD_START_KEY);
+}
+
 // Get cycle length (avg or default)
 export function getCycleLength(): number {
   const stored = localStorage.getItem(CYCLE_LENGTH_KEY);
@@ -110,8 +126,15 @@ export function setPeriodLength(days: number): void {
   localStorage.setItem(PERIOD_LENGTH_KEY, days.toString());
 }
 
-// Get last period start date
+// Get last period start date (prioritize manual setting over calculated)
 export function getLastPeriodStartDate(): Date | null {
+  // First check if there's a manually set start date
+  const manualStart = getManualPeriodStartDate();
+  if (manualStart) {
+    return manualStart;
+  }
+  
+  // Fall back to calculated start date from history
   const history = getPeriodHistory();
   if (history.length === 0) return null;
   
