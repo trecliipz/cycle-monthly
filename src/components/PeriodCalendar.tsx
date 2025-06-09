@@ -2,14 +2,13 @@
 import { useState } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
-import { addDays, isSameDay, isWithinInterval, startOfDay } from "date-fns";
 import {
   hasDataForDate,
   isDateInPredictedPeriod,
   isDateInOvulationPeriod,
-  predictNextPeriod
+  predictNextPeriod,
+  getDataForDate
 } from "@/utils/periodUtils";
-import { DayProps } from "react-day-picker";
 
 interface PeriodCalendarProps {
   selectedDate: Date | undefined;
@@ -27,39 +26,51 @@ export function PeriodCalendar({
   // Get prediction information
   const prediction = predictNextPeriod();
   
+  // Helper function to check if a date has period flow data
+  const hasActualPeriodFlow = (date: Date): boolean => {
+    const data = getDataForDate(date);
+    return data ? data.flow !== "none" : false;
+  };
+  
   return (
     <div className="flex flex-col space-y-4">
       <style>
         {`
-          .period-dot {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background-color: #ef4444;
-            display: inline-block;
-          }
-          
-          .ovulation-dot {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background-color: #f97316;
-            display: inline-block;
-          }
-          
-          .prediction-dot {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background-color: #f472b6;
-            display: inline-block;
-          }
-          
-          .calendar-day-with-dot {
+          .rdp-day {
             position: relative;
           }
           
-          .calendar-day-with-dot::after {
+          .period-day {
+            background-color: #fef2f2 !important;
+            color: #b91c1c !important;
+            border-radius: 6px;
+          }
+          
+          .period-day:hover {
+            background-color: #fee2e2 !important;
+          }
+          
+          .ovulation-day {
+            background-color: #fff7ed !important;
+            color: #c2410c !important;
+            border-radius: 6px;
+          }
+          
+          .ovulation-day:hover {
+            background-color: #fed7aa !important;
+          }
+          
+          .prediction-day {
+            background-color: #fdf2f8 !important;
+            color: #be185d !important;
+            border-radius: 6px;
+          }
+          
+          .prediction-day:hover {
+            background-color: #fce7f3 !important;
+          }
+          
+          .period-day::after {
             content: '';
             position: absolute;
             bottom: 2px;
@@ -68,18 +79,31 @@ export function PeriodCalendar({
             width: 6px;
             height: 6px;
             border-radius: 50%;
+            background-color: #dc2626;
           }
           
-          .has-period::after {
-            background-color: #ef4444;
+          .ovulation-day::after {
+            content: '';
+            position: absolute;
+            bottom: 2px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background-color: #ea580c;
           }
           
-          .has-ovulation::after {
-            background-color: #f97316;
-          }
-          
-          .has-prediction::after {
-            background-color: #f472b6;
+          .prediction-day::after {
+            content: '';
+            position: absolute;
+            bottom: 2px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background-color: #db2777;
           }
         `}
       </style>
@@ -92,31 +116,31 @@ export function PeriodCalendar({
         month={month}
         className={cn("rounded-md border shadow p-3 pointer-events-auto", className)}
         modifiers={{
-          period: (date) => hasDataForDate(date),
-          prediction: (date) => prediction ? isDateInPredictedPeriod(date) : false,
+          period: (date) => hasActualPeriodFlow(date),
           ovulation: (date) => isDateInOvulationPeriod(date),
+          prediction: (date) => prediction ? isDateInPredictedPeriod(date) : false,
         }}
         modifiersClassNames={{
-          period: "bg-red-50 text-red-700 has-period calendar-day-with-dot",
-          prediction: "bg-pink-50 text-pink-700 has-prediction calendar-day-with-dot",
-          ovulation: "bg-orange-50 text-orange-700 has-ovulation calendar-day-with-dot",
+          period: "period-day",
+          ovulation: "ovulation-day", 
+          prediction: "prediction-day",
         }}
       />
       
       <div className="text-sm text-muted-foreground">
         <div className="flex flex-wrap gap-4">
-          <p className="flex items-center">
-            <span className="period-dot mr-2"></span>
-            Period
-          </p>
-          <p className="flex items-center">
-            <span className="ovulation-dot mr-2"></span>
-            Ovulation
-          </p>
-          <p className="flex items-center">
-            <span className="prediction-dot mr-2"></span>
-            Predicted
-          </p>
+          <div className="flex items-center">
+            <div className="w-3 h-3 rounded-full bg-red-500 mr-2"></div>
+            <span>Period</span>
+          </div>
+          <div className="flex items-center">
+            <div className="w-3 h-3 rounded-full bg-orange-500 mr-2"></div>
+            <span>Ovulation</span>
+          </div>
+          <div className="flex items-center">
+            <div className="w-3 h-3 rounded-full bg-pink-600 mr-2"></div>
+            <span>Predicted</span>
+          </div>
         </div>
       </div>
     </div>
