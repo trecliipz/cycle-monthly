@@ -205,6 +205,26 @@ export function calculateOvulationWindow(): { start: Date, end: Date } | null {
   };
 }
 
+// Calculate fertile window (usually 6 days - 5 days before ovulation + ovulation day)
+export function calculateFertileWindow(): { start: Date, end: Date } | null {
+  const lastStart = getLastPeriodStartDate();
+  if (!lastStart) return null;
+  
+  const cycleLength = getCycleLength();
+  
+  // Ovulation typically happens 14 days before the next period starts
+  const ovulationDay = addDays(lastStart, cycleLength - 14);
+  
+  // Fertile window is typically 5 days before ovulation + ovulation day
+  const fertileStart = addDays(ovulationDay, -5);
+  const fertileEnd = ovulationDay;
+  
+  return {
+    start: fertileStart,
+    end: fertileEnd
+  };
+}
+
 // Check if a date is within a predicted period
 export function isDateInPredictedPeriod(date: Date): boolean {
   const prediction = predictNextPeriod();
@@ -225,6 +245,18 @@ export function isDateInOvulationPeriod(date: Date): boolean {
   const checkDate = startOfDay(date);
   const start = startOfDay(ovulation.start);
   const end = startOfDay(ovulation.end);
+  
+  return checkDate >= start && checkDate <= end;
+}
+
+// Check if a date is within the fertile window
+export function isDateInFertileWindow(date: Date): boolean {
+  const fertileWindow = calculateFertileWindow();
+  if (!fertileWindow) return false;
+  
+  const checkDate = startOfDay(date);
+  const start = startOfDay(fertileWindow.start);
+  const end = startOfDay(fertileWindow.end);
   
   return checkDate >= start && checkDate <= end;
 }

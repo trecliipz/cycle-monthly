@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import {
   isDateInPredictedPeriod,
   isDateInOvulationPeriod,
+  isDateInFertileWindow,
   predictNextPeriod,
   getPeriodLength,
   getLastPeriodStartDate
@@ -72,6 +73,16 @@ export function PeriodCalendar({
             background-color: #fca5a5 !important;
           }
           
+          .fertile-window-day {
+            background-color: #dcfce7 !important;
+            color: #166534 !important;
+            border-radius: 6px;
+          }
+          
+          .fertile-window-day:hover {
+            background-color: #bbf7d0 !important;
+          }
+          
           .ovulation-day {
             background-color: #fff7ed !important;
             color: #c2410c !important;
@@ -102,6 +113,18 @@ export function PeriodCalendar({
             height: 6px;
             border-radius: 50%;
             background-color: #dc2626;
+          }
+          
+          .fertile-window-day::after {
+            content: '';
+            position: absolute;
+            bottom: 2px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background-color: #16a34a;
           }
           
           .ovulation-day::after {
@@ -140,21 +163,27 @@ export function PeriodCalendar({
         className={cn("rounded-md border shadow p-3 pointer-events-auto", className)}
         modifiers={{
           currentPeriod: (date) => isDateInCurrentPeriod(date),
+          fertileWindow: (date) => isDateInFertileWindow(date),
           ovulation: (date) => isDateInOvulationPeriod(date),
           prediction: (date) => prediction ? isDateInPredictedPeriod(date) : false,
         }}
         modifiersClassNames={{
           currentPeriod: "current-period-day",
+          fertileWindow: "fertile-window-day",
           ovulation: "ovulation-day", 
           prediction: "prediction-day",
         }}
       />
       
       <div className="text-sm text-muted-foreground">
-        <div className="flex flex-wrap gap-4">
+        <div className="grid grid-cols-2 gap-2">
           <div className="flex items-center">
             <div className="w-3 h-3 rounded-full bg-red-400 mr-2"></div>
-            <span>Current Period</span>
+            <span>Period Days</span>
+          </div>
+          <div className="flex items-center">
+            <div className="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
+            <span>Fertile Window</span>
           </div>
           <div className="flex items-center">
             <div className="w-3 h-3 rounded-full bg-orange-500 mr-2"></div>
@@ -162,7 +191,7 @@ export function PeriodCalendar({
           </div>
           <div className="flex items-center">
             <div className="w-3 h-3 rounded-full bg-pink-600 mr-2"></div>
-            <span>Predicted</span>
+            <span>Predicted Period</span>
           </div>
         </div>
       </div>
