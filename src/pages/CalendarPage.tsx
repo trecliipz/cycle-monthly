@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PeriodCalendar } from "@/components/PeriodCalendar";
 import { PeriodForm } from "@/components/PeriodForm";
 import { Card } from "@/components/ui/card";
@@ -24,6 +23,19 @@ export default function CalendarPage() {
     setKey(prev => prev + 1);
     setShowForm(false);
   };
+
+  // Listen for cycle settings updates
+  useEffect(() => {
+    const handleCycleUpdate = () => {
+      setKey(prev => prev + 1);
+    };
+
+    window.addEventListener('cycleSettingsUpdated', handleCycleUpdate);
+    
+    return () => {
+      window.removeEventListener('cycleSettingsUpdated', handleCycleUpdate);
+    };
+  }, []);
 
   const periodData = getDataForDate(selectedDate);
 

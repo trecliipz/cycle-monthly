@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PeriodCalendar } from "@/components/PeriodCalendar";
 import { PeriodForm } from "@/components/PeriodForm";
 import { CycleStats } from "@/components/CycleStats";
@@ -22,6 +21,19 @@ const Index = () => {
     setKey(prev => prev + 1); // Force re-render to update calendar
     toast.success("Period data saved successfully");
   };
+
+  // Listen for cycle settings updates
+  useEffect(() => {
+    const handleCycleUpdate = () => {
+      setKey(prev => prev + 1); // Force re-render to update calendar with new predictions
+    };
+
+    window.addEventListener('cycleSettingsUpdated', handleCycleUpdate);
+    
+    return () => {
+      window.removeEventListener('cycleSettingsUpdated', handleCycleUpdate);
+    };
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-period-lavender/30 px-4 py-6 md:py-10 mx-auto max-w-7xl">

@@ -27,27 +27,63 @@ export function PeriodCalendar({
   // Get prediction information
   const prediction = predictNextPeriod();
   
-  const dayStyle = (date: Date) => {
-    // Period logged days (show with a red dot)
-    if (hasDataForDate(date)) {
-      return "relative period-logged after:absolute after:period-dot after:left-1/2 after:-translate-x-1/2 after:bottom-1";
-    }
-    
-    // Ovulation days (show with a pink dot)
-    if (isDateInOvulationPeriod(date)) {
-      return "relative ovulation-day after:absolute after:ovulation-dot after:left-1/2 after:-translate-x-1/2 after:bottom-1";
-    }
-    
-    // Predicted period days (show with a lighter dot)
-    if (prediction && isDateInPredictedPeriod(date)) {
-      return "relative period-predicted after:absolute after:prediction-dot after:left-1/2 after:-translate-x-1/2 after:bottom-1";
-    }
-    
-    return "";
-  };
-  
   return (
     <div className="flex flex-col space-y-4">
+      <style>
+        {`
+          .period-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background-color: #ef4444;
+            display: inline-block;
+          }
+          
+          .ovulation-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background-color: #f97316;
+            display: inline-block;
+          }
+          
+          .prediction-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background-color: #f472b6;
+            display: inline-block;
+          }
+          
+          .calendar-day-with-dot {
+            position: relative;
+          }
+          
+          .calendar-day-with-dot::after {
+            content: '';
+            position: absolute;
+            bottom: 2px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+          }
+          
+          .has-period::after {
+            background-color: #ef4444;
+          }
+          
+          .has-ovulation::after {
+            background-color: #f97316;
+          }
+          
+          .has-prediction::after {
+            background-color: #f472b6;
+          }
+        `}
+      </style>
+      
       <Calendar
         mode="single"
         selected={selectedDate}
@@ -61,24 +97,9 @@ export function PeriodCalendar({
           ovulation: (date) => isDateInOvulationPeriod(date),
         }}
         modifiersClassNames={{
-          period: "period-active",
-          prediction: "bg-period-light text-period-text",
-          ovulation: "bg-ovulation-light text-ovulation-text",
-        }}
-        components={{
-          Day: (props: DayProps) => {
-            // Access the date property directly from props
-            const { date } = props;
-            
-            // In react-day-picker v8+, we need to display the day number from the date
-            const dayNumber = date.getDate();
-            
-            return (
-              <div className={cn(dayStyle(date), "h-9 w-9 p-0 font-normal aria-selected:opacity-100")}>
-                {dayNumber}
-              </div>
-            );
-          },
+          period: "bg-red-50 text-red-700 has-period calendar-day-with-dot",
+          prediction: "bg-pink-50 text-pink-700 has-prediction calendar-day-with-dot",
+          ovulation: "bg-orange-50 text-orange-700 has-ovulation calendar-day-with-dot",
         }}
       />
       

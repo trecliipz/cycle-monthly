@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -65,7 +64,11 @@ export default function SettingsPage() {
   const saveCycleSettings = () => {
     setCycleLength(cycleLength);
     setPeriodLength(periodLength);
-    toast.success("Cycle settings saved");
+    
+    // Trigger a page refresh to update calendar predictions
+    window.dispatchEvent(new CustomEvent('cycleSettingsUpdated'));
+    
+    toast.success("Cycle settings saved - calendar updated with new predictions");
   };
 
   return (
