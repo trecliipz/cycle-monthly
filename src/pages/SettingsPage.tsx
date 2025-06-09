@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -62,13 +63,17 @@ export default function SettingsPage() {
   };
   
   const saveCycleSettings = () => {
+    console.log("Saving cycle settings:", { cycleLength, periodLength });
+    
+    // Save to localStorage
     setCycleLength(cycleLength);
     setPeriodLength(periodLength);
     
-    // Trigger a page refresh to update calendar predictions and insights
-    setTimeout(() => {
-      window.dispatchEvent(new CustomEvent('cycleSettingsUpdated'));
-    }, 100);
+    console.log("Settings saved to localStorage");
+    
+    // Dispatch event to update other components including calendar and insights
+    console.log("Dispatching cycleSettingsUpdated event");
+    window.dispatchEvent(new CustomEvent('cycleSettingsUpdated'));
     
     toast.success("Cycle settings saved - all predictions updated");
   };
