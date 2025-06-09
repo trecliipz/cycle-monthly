@@ -74,13 +74,19 @@ export function CycleStats() {
   };
   
   const handleSaveSettings = () => {
+    console.log("Saving settings with period start date:", periodStartDate);
+    
     setCycleLength(cycleLength);
     setPeriodLength(periodLength);
     
     // Save period start date if provided
     if (periodStartDate) {
       const startDate = new Date(periodStartDate);
+      console.log("Parsed start date:", startDate);
+      
       if (!isNaN(startDate.getTime())) {
+        console.log("Creating period days for length:", periodLength);
+        
         // Create period days for the specified period length
         for (let i = 0; i < periodLength; i++) {
           const periodDate = new Date(startDate);
@@ -91,15 +97,22 @@ export function CycleStats() {
             flow: i === 0 ? FlowIntensity.Heavy : (i < 2 ? FlowIntensity.Medium : FlowIntensity.Light)
           };
           
+          console.log("Saving period day:", periodDate, periodDay);
           savePeriodDay(periodDay);
         }
+        
+        // Clear the input after saving
         setPeriodStartDate("");
+        console.log("Period start date cleared");
+      } else {
+        console.error("Invalid date provided:", periodStartDate);
       }
     }
     
     refreshStats();
     
     // Dispatch event to update other components
+    console.log("Dispatching cycleSettingsUpdated event");
     window.dispatchEvent(new CustomEvent('cycleSettingsUpdated'));
   };
   
@@ -141,7 +154,7 @@ export function CycleStats() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="period-start-date">Last Period Start Date</Label>
+          <Label htmlFor="period-start-date">Period Start Date</Label>
           <Input
             id="period-start-date"
             type="date"
@@ -154,10 +167,9 @@ export function CycleStats() {
         
         <Button 
           onClick={handleSaveSettings}
-          variant="outline"
-          className="w-full"
+          className="w-full bg-period-accent hover:bg-period-dark text-white"
         >
-          Update Settings
+          Save Settings
         </Button>
         
         <div className="pt-4 border-t">
