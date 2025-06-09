@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -20,9 +19,12 @@ export function CycleStats() {
     refreshStats();
   }, [key]);
 
-  // Listen for cycle settings updates
+  // Listen for cycle settings updates from Settings page
   useEffect(() => {
     const handleCycleUpdate = () => {
+      // Update state to reflect current stored values
+      setCycleLengthState(getCycleLength());
+      setPeriodLengthState(getPeriodLength());
       setKey(prev => prev + 1);
     };
 
@@ -34,16 +36,23 @@ export function CycleStats() {
   }, []);
   
   const refreshStats = () => {
+    // Always get the current stored values first
+    const currentCycleLength = getCycleLength();
+    const currentPeriodLength = getPeriodLength();
+    
+    setCycleLengthState(currentCycleLength);
+    setPeriodLengthState(currentPeriodLength);
+    
     // Get calculated average cycle length
     const avgCycleLength = calculateAverageCycleLength();
-    if (avgCycleLength !== getCycleLength()) {
+    if (avgCycleLength !== currentCycleLength) {
       setCycleLength(avgCycleLength);
       setCycleLengthState(avgCycleLength);
     }
     
     // Get calculated average period length
     const avgPeriodLength = calculateAveragePeriodLength();
-    if (avgPeriodLength !== getPeriodLength()) {
+    if (avgPeriodLength !== currentPeriodLength) {
       setPeriodLength(avgPeriodLength);
       setPeriodLengthState(avgPeriodLength);
     }
