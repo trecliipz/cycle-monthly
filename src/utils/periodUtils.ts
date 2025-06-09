@@ -1,4 +1,3 @@
-
 import { addDays, format, isSameDay, parse, startOfDay, subDays, differenceInDays } from "date-fns";
 
 // Types for our period tracker
@@ -224,26 +223,60 @@ export function clearManualPeriodStartDate(): void {
   localStorage.removeItem(MANUAL_PERIOD_START_KEY);
 }
 
-// Get cycle length (enhanced with analytics)
+// Get cycle length (enhanced with priority: Manual Settings → Analytics → Defaults)
 export function getCycleLength(): number {
+  // First priority: Check for manually saved cycle length
+  const stored = localStorage.getItem(CYCLE_LENGTH_KEY);
+  if (stored) {
+    const value = parseInt(stored, 10);
+    if (!isNaN(value) && value >= 20 && value <= 40) {
+      return value;
+    }
+  }
+  
+  // Second priority: Use analytics if available
   const analytics = getCycleAnalytics();
-  return analytics.averageCycleLength;
+  if (analytics.totalCycles > 0) {
+    return analytics.averageCycleLength;
+  }
+  
+  // Third priority: Default value
+  return DEFAULT_CYCLE_LENGTH;
 }
 
 // Set cycle length
 export function setCycleLength(days: number): void {
-  localStorage.setItem(CYCLE_LENGTH_KEY, days.toString());
+  if (days >= 20 && days <= 40) {
+    localStorage.setItem(CYCLE_LENGTH_KEY, days.toString());
+  }
 }
 
-// Get period length (enhanced)
+// Get period length (enhanced with priority: Manual Settings → Analytics → Defaults)
 export function getPeriodLength(): number {
+  // First priority: Check for manually saved period length
+  const stored = localStorage.getItem(PERIOD_LENGTH_KEY);
+  if (stored) {
+    const value = parseInt(stored, 10);
+    if (!isNaN(value) && value >= 1 && value <= 14) {
+      return value;
+    }
+  }
+  
+  // Second priority: Use analytics if available
   const analytics = getCycleAnalytics();
-  return analytics.averagePeriodLength;
+  if (analytics.totalCycles > 0) {
+    return analytics.averagePeriodLength;
+  }
+  
+  // Third priority: Default value
+  return DEFAULT_PERIOD_LENGTH;
 }
 
 // Set period length
 export function setPeriodLength(days: number): void {
-  localStorage.setItem(PERIOD_LENGTH_KEY, days.toString());
+  if (days >= 1 && days <= 14) {
+    localStorage.setItem(PERIOD_LENGTH_KEY, days.toString());
+  }
 }
 
 // Get last period start date (enhanced)

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -39,13 +40,20 @@ export default function SettingsPage() {
   const [settings, setSettings] = useState<AppSettings>(() => getSettings());
   
   // Add state for cycle and period length
-  const [cycleLength, setCycleLengthState] = useState(getCycleLength());
-  const [periodLength, setPeriodLengthState] = useState(getPeriodLength());
+  const [cycleLength, setCycleLengthState] = useState(28);
+  const [periodLength, setPeriodLengthState] = useState(5);
 
   // Load settings when component mounts
   useEffect(() => {
     const loadedSettings = getSettings();
     setSettings(loadedSettings);
+    
+    // Load cycle and period length from localStorage
+    const savedCycleLength = getCycleLength();
+    const savedPeriodLength = getPeriodLength();
+    
+    setCycleLengthState(savedCycleLength);
+    setPeriodLengthState(savedPeriodLength);
   }, []);
 
   // Helper function to update a setting and persist it
@@ -78,6 +86,17 @@ export default function SettingsPage() {
   
   const saveCycleSettings = () => {
     console.log("Saving cycle settings:", { cycleLength, periodLength });
+    
+    // Validate ranges
+    if (cycleLength < 20 || cycleLength > 40) {
+      toast.error("Cycle length must be between 20-40 days");
+      return;
+    }
+    
+    if (periodLength < 1 || periodLength > 14) {
+      toast.error("Period length must be between 1-14 days");
+      return;
+    }
     
     // Save to localStorage
     setCycleLength(cycleLength);
