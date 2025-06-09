@@ -15,11 +15,10 @@ export function CycleStats() {
   const [periodStartDate, setPeriodStartDate] = useState("");
   const [lastPeriodDate, setLastPeriodDate] = useState<Date | null>(null);
   const [nextPeriodDates, setNextPeriodDates] = useState<{ start: Date, end: Date } | null>(null);
-  const [key, setKey] = useState(0);
   
   useEffect(() => {
     refreshStats();
-  }, [key]);
+  }, []);
 
   // Listen for cycle settings updates from Settings page
   useEffect(() => {
@@ -27,7 +26,7 @@ export function CycleStats() {
       // Update state to reflect current stored values
       setCycleLengthState(getCycleLength());
       setPeriodLengthState(getPeriodLength());
-      setKey(prev => prev + 1);
+      refreshStats();
     };
 
     window.addEventListener('cycleSettingsUpdated', handleCycleUpdate);
@@ -105,7 +104,7 @@ export function CycleStats() {
     
     refreshStats();
     
-    // Dispatch event to update other components
+    // Dispatch event to update other components including calendar
     console.log("Dispatching cycleSettingsUpdated event");
     window.dispatchEvent(new CustomEvent('cycleSettingsUpdated'));
   };

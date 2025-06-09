@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -54,7 +55,7 @@ export default function InsightsPage() {
               <CardTitle className="text-lg">Cycle Analysis</CardTitle>
             </CardHeader>
             <CardContent>
-              <CycleStats key={`stats-${key}`} />
+              <CycleStats key={key} />
             </CardContent>
           </Card>
         </TabsContent>
