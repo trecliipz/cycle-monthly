@@ -1,3 +1,4 @@
+
 import { addDays, format, isSameDay, parse, startOfDay, subDays } from "date-fns";
 
 // Types for our period tracker
@@ -216,6 +217,31 @@ export function getDataForDate(date: Date): PeriodDay | null {
   const history = getPeriodHistory();
   const found = history.find(day => isSameDay(new Date(day.date), date));
   return found || null;
+}
+
+// Check if today is a period day (predicted or actual)
+export function isTodayPeriodDay(): boolean {
+  const today = new Date();
+  
+  // Check if there's actual period data for today
+  const todayData = getDataForDate(today);
+  if (todayData && todayData.flow !== FlowIntensity.None) {
+    return true;
+  }
+  
+  // Check if today is in the predicted period
+  return isDateInPredictedPeriod(today);
+}
+
+// Get current cycle day
+export function getCurrentCycleDay(): number | null {
+  const lastStart = getLastPeriodStartDate();
+  if (!lastStart) return null;
+  
+  const today = new Date();
+  const daysSinceLastPeriod = Math.floor((today.getTime() - lastStart.getTime()) / (1000 * 60 * 60 * 24));
+  
+  return daysSinceLastPeriod + 1; // Add 1 because day 1 is the first day of the period
 }
 
 // Format date to display in the app

@@ -9,7 +9,14 @@ import {
   CardTitle
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { getDataForDate, formatDateForDisplay, predictNextPeriod } from "@/utils/periodUtils";
+import { 
+  getDataForDate, 
+  formatDateForDisplay, 
+  predictNextPeriod, 
+  getCycleLength,
+  getCurrentCycleDay,
+  isTodayPeriodDay
+} from "@/utils/periodUtils";
 import { DropletIcon, CalendarIcon, HeartIcon, InfoIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -21,6 +28,8 @@ export default function Home() {
   const [cycleTotalDays, setCycleTotalDays] = useState(28); // Default
   const [currentPhase, setCurrentPhase] = useState("");
   const [periodPrediction, setPeriodPrediction] = useState<{ start: Date; end: Date } | null>(null);
+  const [isPeriodDay, setIsPeriodDay] = useState(false);
+  const [key, setKey] = useState(0);
 
   useEffect(() => {
     // Set greeting based on time of day
@@ -29,29 +38,48 @@ export default function Home() {
     else if (hour < 18) setGreeting("Good Afternoon");
     else setGreeting("Good Evening");
 
+    // Get cycle settings
+    const totalDays = getCycleLength();
+    setCycleTotalDays(totalDays);
+
+    // Get current cycle day
+    const currentDay = getCurrentCycleDay();
+    setCycleDay(currentDay);
+
+    // Check if today is a period day
+    setIsPeriodDay(isTodayPeriodDay());
+
     // Get cycle predictions
     const prediction = predictNextPeriod();
     if (prediction) {
       setPeriodPrediction(prediction);
-      
-      // Calculate current day in cycle (simplified)
-      // In a real app, this would be more sophisticated
-      const lastPeriod = new Date(prediction.start);
-      lastPeriod.setDate(lastPeriod.getDate() - cycleTotalDays);
-      const daysSinceLastPeriod = Math.floor((today.getTime() - lastPeriod.getTime()) / (1000 * 60 * 60 * 24));
-      setCycleDay(daysSinceLastPeriod);
-      
-      // Determine cycle phase (simplified)
-      if (daysSinceLastPeriod <= 5) {
+    }
+
+    // Determine cycle phase (simplified)
+    if (currentDay) {
+      if (currentDay <= 5) {
         setCurrentPhase("Menstrual");
-      } else if (daysSinceLastPeriod <= 13) {
+      } else if (currentDay <= 13) {
         setCurrentPhase("Follicular");
-      } else if (daysSinceLastPeriod <= 16) {
+      } else if (currentDay <= 16) {
         setCurrentPhase("Ovulation");
       } else {
         setCurrentPhase("Luteal");
       }
     }
+  }, [key]);
+
+  // Listen for cycle settings updates
+  useEffect(() => {
+    const handleCycleUpdate = () => {
+      setKey(prev => prev + 1);
+    };
+
+    window.addEventListener('cycleSettingsUpdated', handleCycleUpdate);
+    
+    return () => {
+      window.removeEventListener('cycleSettingsUpdated', handleCycleUpdate);
+    };
   }, []);
   
   // Get today's logged data
@@ -62,13 +90,16 @@ export default function Home() {
       <header className="mt-6 text-left">
         <h1 className="text-2xl font-semibold text-period-accent">{greeting}, {userName}</h1>
         <p className="text-gray-500 text-sm">{formatDateForDisplay(today)}</p>
+        {isPeriodDay && (
+          <p className="text-rose-500 text-sm font-medium">Today is a period day</p>
+        )}
       </header>
       
       <div className="relative flex justify-center my-4">
         <div className="w-48 h-48 rounded-full border-8 border-period-lavender flex items-center justify-center relative">
           <div className="text-center">
             <p className="text-sm text-period-accent font-medium">{currentPhase} Phase</p>
-            <h2 className="text-3xl font-bold text-period-dark">Day {cycleDay}</h2>
+            <h2 className="text-3xl font-bold text-period-dark">Day {cycleDay || "?"}</h2>
             <p className="text-xs text-gray-500">of {cycleTotalDays}</p>
           </div>
         </div>
