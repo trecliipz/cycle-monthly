@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import {
@@ -22,8 +21,22 @@ export function PeriodCalendar({
   className 
 }: PeriodCalendarProps) {
   const [month, setMonth] = useState<Date>(new Date());
+  const [key, setKey] = useState(0);
   
-  // Get prediction information
+  // Listen for cycle settings updates
+  useEffect(() => {
+    const handleCycleUpdate = () => {
+      setKey(prev => prev + 1);
+    };
+
+    window.addEventListener('cycleSettingsUpdated', handleCycleUpdate);
+    
+    return () => {
+      window.removeEventListener('cycleSettingsUpdated', handleCycleUpdate);
+    };
+  }, []);
+  
+  // Get prediction information (will recalculate when key changes)
   const prediction = predictNextPeriod();
   
   // Helper function to check if a date has period flow data
@@ -109,6 +122,7 @@ export function PeriodCalendar({
       </style>
       
       <Calendar
+        key={`calendar-${key}`}
         mode="single"
         selected={selectedDate}
         onSelect={onSelect}
