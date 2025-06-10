@@ -11,9 +11,10 @@ import { format, addMonths } from "date-fns";
 import { 
   getDataForDate, 
   setManualPeriodStartDate,
-  getEnhancedPrediction,
+  getAdvancedPrediction,
   getPeriodLength,
-  getCycleLength
+  getCycleLength,
+  getLastPeriodStartDate
 } from "@/utils/periodUtils";
 
 export default function CalendarPage() {
@@ -45,6 +46,7 @@ export default function CalendarPage() {
   // Listen for cycle settings updates
   useEffect(() => {
     const handleCycleUpdate = () => {
+      console.log("Calendar: Cycle settings updated, refreshing...");
       setKey(prev => prev + 1);
     };
 
@@ -56,7 +58,15 @@ export default function CalendarPage() {
   }, []);
 
   const periodData = getDataForDate(selectedDate);
-  const prediction = getEnhancedPrediction();
+  const prediction = getAdvancedPrediction();
+  const lastPeriodStart = getLastPeriodStartDate();
+  
+  console.log("Calendar Debug:", {
+    lastPeriodStart,
+    prediction,
+    cycleLength: getCycleLength(),
+    periodLength: getPeriodLength()
+  });
   
   // Calculate confidence styling
   const getConfidenceBadge = () => {
@@ -78,7 +88,22 @@ export default function CalendarPage() {
 
   // Get forecast information
   const getPredictionSummary = () => {
-    if (!prediction) return null;
+    if (!prediction) {
+      return (
+        <div className="mt-4 space-y-3 text-sm">
+          <div className="flex items-center">
+            <AlertCircle className="h-4 w-4 mr-2 text-amber-500" />
+            <span className="font-medium text-amber-700">No Prediction Data Available</span>
+          </div>
+          <p className="text-muted-foreground">
+            Add a period start date to see predictions. Use "Set as Period Start" below or add period data on the Log page.
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Current settings: {getCycleLength()} day cycle, {getPeriodLength()} day period
+          </p>
+        </div>
+      );
+    }
     
     const cycleLength = getCycleLength();
     const periodLength = getPeriodLength();

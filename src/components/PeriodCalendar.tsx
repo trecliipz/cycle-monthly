@@ -6,7 +6,7 @@ import {
   isDateInPredictedPeriod,
   isDateInOvulationPeriod,
   isDateInFertileWindow,
-  predictNextPeriod,
+  getAdvancedPrediction,
   getPeriodLength,
   getLastPeriodStartDate,
   getDataForDate
@@ -42,6 +42,7 @@ export function PeriodCalendar({
   // Listen for cycle settings updates
   useEffect(() => {
     const handleCycleUpdate = () => {
+      console.log("PeriodCalendar: Cycle settings updated, refreshing...");
       setKey(prev => prev + 1);
     };
 
@@ -59,7 +60,13 @@ export function PeriodCalendar({
   }, [month]);
   
   // Get prediction information (will recalculate when key changes)
-  const prediction = predictNextPeriod();
+  const prediction = getAdvancedPrediction();
+
+  console.log("PeriodCalendar Debug:", {
+    prediction,
+    lastPeriodStart: getLastPeriodStartDate(),
+    periodLength: getPeriodLength()
+  });
 
   // Helper function to check if a date is within the current period based on last period start and period length
   const isDateInCurrentPeriod = (date: Date): boolean => {
@@ -71,7 +78,16 @@ export function PeriodCalendar({
     const periodStart = startOfDay(lastStart);
     const periodEnd = startOfDay(addDays(lastStart, periodLength - 1));
     
-    return checkDate >= periodStart && checkDate <= periodEnd;
+    const isInPeriod = checkDate >= periodStart && checkDate <= periodEnd;
+    console.log("Current period check:", {
+      date: format(date, 'yyyy-MM-dd'),
+      lastStart: format(lastStart, 'yyyy-MM-dd'),
+      periodEnd: format(periodEnd, 'yyyy-MM-dd'),
+      periodLength,
+      isInPeriod
+    });
+    
+    return isInPeriod;
   };
 
   // Helper to get additional day information for the calendar tooltip
