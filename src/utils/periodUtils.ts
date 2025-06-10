@@ -375,7 +375,7 @@ export function getCycleLength(): number {
   }
   
   // Second priority: Use analytics if available
-  const analytics = getCycleAnalytics();
+  const analytics = getAdvancedCycleAnalytics();
   if (analytics.totalCycles > 0) {
     return analytics.averageCycleLength;
   }
@@ -403,7 +403,7 @@ export function getPeriodLength(): number {
   }
   
   // Second priority: Use analytics if available
-  const analytics = getCycleAnalytics();
+  const analytics = getAdvancedCycleAnalytics();
   if (analytics.totalCycles > 0) {
     return analytics.averagePeriodLength;
   }

@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,14 +6,14 @@ import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { 
-  getCycleAnalytics, 
-  getEnhancedPrediction, 
+  getAdvancedCycleAnalytics, 
+  getAdvancedPrediction, 
   formatDateForDisplay,
   savePeriodDay,
   getDefaultPeriodDay,
   FlowIntensity,
   type CycleAnalytics,
-  type PredictionData
+  type AdvancedPredictionData
 } from "@/utils/periodUtils";
 import { Calendar as CalendarIcon, TrendingUp, Target, Clock, AlertCircle } from "lucide-react";
 import { format } from "date-fns";
@@ -23,7 +22,7 @@ import { Link } from "react-router-dom";
 export function EnhancedCycleStats() {
   const [periodStartDate, setPeriodStartDate] = useState("");
   const [analytics, setAnalytics] = useState<CycleAnalytics | null>(null);
-  const [prediction, setPrediction] = useState<PredictionData | null>(null);
+  const [prediction, setPrediction] = useState<AdvancedPredictionData | null>(null);
   const [key, setKey] = useState(0);
   
   useEffect(() => {
@@ -44,8 +43,8 @@ export function EnhancedCycleStats() {
   }, []);
   
   const refreshStats = () => {
-    const cycleAnalytics = getCycleAnalytics();
-    const enhancedPrediction = getEnhancedPrediction();
+    const cycleAnalytics = getAdvancedCycleAnalytics();
+    const enhancedPrediction = getAdvancedPrediction();
     
     setAnalytics(cycleAnalytics);
     setPrediction(enhancedPrediction);
