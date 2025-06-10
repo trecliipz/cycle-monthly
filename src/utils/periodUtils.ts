@@ -49,6 +49,17 @@ export interface AdvancedPredictionData {
   riskFactors: string[];
 }
 
+// Multi-month prediction interface
+export interface MultiMonthPrediction {
+  month: number; // 1 for next month, 2 for month after
+  nextPeriodStart: Date;
+  nextPeriodEnd: Date;
+  nextOvulation: Date;
+  fertileWindowStart: Date;
+  fertileWindowEnd: Date;
+  confidence: 'low' | 'medium' | 'high';
+}
+
 export enum SymptomIntensity {
   None = "none",
   Mild = "mild",
@@ -500,6 +511,62 @@ export function getAdvancedPrediction(): AdvancedPredictionData | null {
   };
 }
 
+// Get predictions for the next 2-3 months
+export function getMultiMonthPredictions(): MultiMonthPrediction[] {
+  const lastStart = getLastPeriodStartDate();
+  if (!lastStart) return [];
+  
+  const analytics = getAdvancedCycleAnalytics();
+  const cycleLength = getCycleLength();
+  const periodLength = getPeriodLength();
+  
+  const predictions: MultiMonthPrediction[] = [];
+  
+  // Calculate predictions for next 3 cycles
+  for (let month = 1; month <= 3; month++) {
+    // Apply trend adjustments
+    let adjustedCycleLength = cycleLength;
+    if (analytics.cycleTrend === 'increasing') {
+      adjustedCycleLength += Math.floor(month / 2);
+    } else if (analytics.cycleTrend === 'decreasing') {
+      adjustedCycleLength -= Math.floor(month / 2);
+    }
+    
+    // Calculate cycle start date
+    const cycleStart = addDays(lastStart, adjustedCycleLength * month);
+    const cycleEnd = addDays(cycleStart, periodLength - 1);
+    
+    // Calculate ovulation (14 days before period)
+    const ovulation = addDays(cycleStart, -14);
+    
+    // Calculate fertile window (5 days before ovulation + ovulation day)
+    const fertileStart = addDays(ovulation, -5);
+    const fertileEnd = ovulation;
+    
+    // Calculate confidence (decreases with distance)
+    let baseConfidence = analytics.predictionConfidence;
+    let confidence: 'low' | 'medium' | 'high' = 'low';
+    
+    // Reduce confidence for future months
+    const adjustedConfidence = baseConfidence - (month - 1) * 20;
+    
+    if (adjustedConfidence >= 75) confidence = 'high';
+    else if (adjustedConfidence >= 50) confidence = 'medium';
+    
+    predictions.push({
+      month,
+      nextPeriodStart: cycleStart,
+      nextPeriodEnd: cycleEnd,
+      nextOvulation: ovulation,
+      fertileWindowStart: fertileStart,
+      fertileWindowEnd: fertileEnd,
+      confidence
+    });
+  }
+  
+  return predictions;
+}
+
 // Generate personalized recommendations
 function generateRecommendations(phase: string, analytics: CycleAnalytics): string[] {
   const recommendations: string[] = [];
@@ -587,38 +654,145 @@ export function calculateFertileWindow(): { start: Date, end: Date } | null {
   };
 }
 
-// Check if a date is within a predicted period
+// Enhanced period detection functions
 export function isDateInPredictedPeriod(date: Date): boolean {
-  const prediction = predictNextPeriod();
-  if (!prediction) return false;
+  const predictions = getMultiMonthPredictions();
+  
+  for (const prediction of predictions) {
+    const checkDate = startOfDay(date);
+    const start = startOfDay(prediction.nextPeriodStart);
+    const end = startOfDay(prediction.nextPeriodEnd);
+    
+    if (checkDate >= start && checkDate <= end) {
+      return true;
+    }
+  }
+  
+  return false;
+}
+
+// Check if date is in second month prediction
+export function isDateInSecondMonthPrediction(date: Date): boolean {
+  const predictions = getMultiMonthPredictions();
+  const secondMonth = predictions.find(p => p.month === 2);
+  
+  if (!secondMonth) return false;
   
   const checkDate = startOfDay(date);
-  const start = startOfDay(prediction.start);
-  const end = startOfDay(prediction.end);
+  const start = startOfDay(secondMonth.nextPeriodStart);
+  const end = startOfDay(secondMonth.nextPeriodEnd);
   
   return checkDate >= start && checkDate <= end;
 }
 
-// Check if a date is within the ovulation period
+// Check if date is in third month prediction
+export function isDateInThirdMonthPrediction(date: Date): boolean {
+  const predictions = getMultiMonthPredictions();
+  const thirdMonth = predictions.find(p => p.month === 3);
+  
+  if (!thirdMonth) return false;
+  
+  const checkDate = startOfDay(date);
+  const start = startOfDay(thirdMonth.nextPeriodStart);
+  const end = startOfDay(thirdMonth.nextPeriodEnd);
+  
+  return checkDate >= start && checkDate <= end;
+}
+
 export function isDateInOvulationPeriod(date: Date): boolean {
-  const ovulation = calculateOvulationWindow();
-  if (!ovulation) return false;
+  const predictions = getMultiMonthPredictions();
+  
+  for (const prediction of predictions) {
+    // Create a 5-day window around ovulation
+    const ovulationStart = addDays(prediction.nextOvulation, -2);
+    const ovulationEnd = addDays(prediction.nextOvulation, 2);
+    
+    const checkDate = startOfDay(date);
+    const start = startOfDay(ovulationStart);
+    const end = startOfDay(ovulationEnd);
+    
+    if (checkDate >= start && checkDate <= end) {
+      return true;
+    }
+  }
+  
+  return false;
+}
+
+// Check if date is in second month ovulation
+export function isDateInSecondMonthOvulation(date: Date): boolean {
+  const predictions = getMultiMonthPredictions();
+  const secondMonth = predictions.find(p => p.month === 2);
+  
+  if (!secondMonth) return false;
+  
+  const ovulationStart = addDays(secondMonth.nextOvulation, -2);
+  const ovulationEnd = addDays(secondMonth.nextOvulation, 2);
   
   const checkDate = startOfDay(date);
-  const start = startOfDay(ovulation.start);
-  const end = startOfDay(ovulation.end);
+  const start = startOfDay(ovulationStart);
+  const end = startOfDay(ovulationEnd);
   
   return checkDate >= start && checkDate <= end;
 }
 
-// Check if a date is within the fertile window
-export function isDateInFertileWindow(date: Date): boolean {
-  const fertileWindow = calculateFertileWindow();
-  if (!fertileWindow) return false;
+// Check if date is in third month ovulation
+export function isDateInThirdMonthOvulation(date: Date): boolean {
+  const predictions = getMultiMonthPredictions();
+  const thirdMonth = predictions.find(p => p.month === 3);
+  
+  if (!thirdMonth) return false;
+  
+  const ovulationStart = addDays(thirdMonth.nextOvulation, -2);
+  const ovulationEnd = addDays(thirdMonth.nextOvulation, 2);
   
   const checkDate = startOfDay(date);
-  const start = startOfDay(fertileWindow.start);
-  const end = startOfDay(fertileWindow.end);
+  const start = startOfDay(ovulationStart);
+  const end = startOfDay(ovulationEnd);
+  
+  return checkDate >= start && checkDate <= end;
+}
+
+export function isDateInFertileWindow(date: Date): boolean {
+  const predictions = getMultiMonthPredictions();
+  
+  for (const prediction of predictions) {
+    const checkDate = startOfDay(date);
+    const start = startOfDay(prediction.fertileWindowStart);
+    const end = startOfDay(prediction.fertileWindowEnd);
+    
+    if (checkDate >= start && checkDate <= end) {
+      return true;
+    }
+  }
+  
+  return false;
+}
+
+// Check if date is in second month fertile window
+export function isDateInSecondMonthFertile(date: Date): boolean {
+  const predictions = getMultiMonthPredictions();
+  const secondMonth = predictions.find(p => p.month === 2);
+  
+  if (!secondMonth) return false;
+  
+  const checkDate = startOfDay(date);
+  const start = startOfDay(secondMonth.fertileWindowStart);
+  const end = startOfDay(secondMonth.fertileWindowEnd);
+  
+  return checkDate >= start && checkDate <= end;
+}
+
+// Check if date is in third month fertile window
+export function isDateInThirdMonthFertile(date: Date): boolean {
+  const predictions = getMultiMonthPredictions();
+  const thirdMonth = predictions.find(p => p.month === 3);
+  
+  if (!thirdMonth) return false;
+  
+  const checkDate = startOfDay(date);
+  const start = startOfDay(thirdMonth.fertileWindowStart);
+  const end = startOfDay(thirdMonth.fertileWindowEnd);
   
   return checkDate >= start && checkDate <= end;
 }
