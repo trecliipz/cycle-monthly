@@ -126,14 +126,24 @@ export function PeriodCalendar({
           }
           
           .current-period-day {
-            background-color: var(--primary) !important;
-            color: var(--primary-foreground) !important;
+            background-color: rgb(239 68 68) !important;
+            color: white !important;
             border-radius: 6px;
           }
           
           .current-period-day:hover {
-            background-color: hsl(var(--primary) / 0.9) !important;
-            color: var(--primary-foreground) !important;
+            background-color: rgb(220 38 38) !important;
+            color: white !important;
+          }
+          
+          .dark .current-period-day {
+            background-color: rgb(127 29 29) !important;
+            color: white !important;
+          }
+          
+          .dark .current-period-day:hover {
+            background-color: rgb(153 27 27) !important;
+            color: white !important;
           }
           
           .fertile-window-day {
@@ -217,7 +227,7 @@ export function PeriodCalendar({
           }
           
           .current-period-day::after {
-            background-color: var(--background);
+            background-color: white;
           }
           
           .fertile-window-day::after {
@@ -278,7 +288,7 @@ export function PeriodCalendar({
       <div className="text-sm text-muted-foreground">
         <div className="grid grid-cols-2 gap-2">
           <div className="flex items-center">
-            <div className="w-3 h-3 rounded-full bg-primary dark:bg-primary mr-2"></div>
+            <div className="w-3 h-3 rounded-full bg-red-500 dark:bg-red-900 mr-2"></div>
             <span>Current Period</span>
           </div>
           <div className="flex items-center">
