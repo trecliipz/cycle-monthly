@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -66,6 +65,9 @@ export default function AccountPage() {
     localStorage.setItem("user_profile", JSON.stringify(profile));
     setEditing(false);
     toast.success("Profile saved successfully");
+    
+    // Trigger a custom event to update bottom navigation
+    window.dispatchEvent(new CustomEvent('profileUpdated'));
   };
 
   // Get user's first name or first initial
@@ -186,11 +188,11 @@ export default function AccountPage() {
           <div className="flex justify-between items-center">
             <div>
               <p className="text-foreground">Cycle Tracking</p>
-              <p className="text-sm text-muted-foreground">Manage your cycle settings</p>
+              <p className="text-sm text-muted-foreground">Manage your cycle settings and log entries</p>
             </div>
-            <Button variant="outline" className="text-primary" onClick={() => window.location.href = "/settings"}>
+            <Button variant="outline" className="text-primary" onClick={() => window.location.href = "/log"}>
               <Calendar className="h-4 w-4 mr-2" />
-              Settings
+              Log & Settings
             </Button>
           </div>
           

@@ -23,9 +23,18 @@ export interface CycleAnalytics {
   totalCycles: number;
   averagePeriodLength: number;
   predictionConfidence: number;
+  cycleTrend: 'stable' | 'increasing' | 'decreasing';
+  symptomPatterns: SymptomPattern[];
+  healthScore: number;
 }
 
-export interface PredictionData {
+export interface SymptomPattern {
+  phase: 'menstrual' | 'follicular' | 'ovulation' | 'luteal';
+  commonSymptoms: string[];
+  severity: 'low' | 'medium' | 'high';
+}
+
+export interface AdvancedPredictionData {
   nextPeriodStart: Date;
   nextPeriodEnd: Date;
   nextOvulation: Date;
@@ -34,6 +43,10 @@ export interface PredictionData {
   daysUntilPeriod: number;
   daysUntilOvulation: number;
   confidence: 'low' | 'medium' | 'high';
+  pmsWindow: { start: Date; end: Date };
+  cyclePhase: 'menstrual' | 'follicular' | 'ovulation' | 'luteal';
+  recommendedActions: string[];
+  riskFactors: string[];
 }
 
 export enum SymptomIntensity {
@@ -159,10 +172,11 @@ export function getCycleLengths(): number[] {
   return cycleLengths;
 }
 
-// Enhanced cycle analytics
-export function getCycleAnalytics(): CycleAnalytics {
+// Enhanced cycle analytics with advanced pattern recognition
+export function getAdvancedCycleAnalytics(): CycleAnalytics {
   const cycleLengths = getCycleLengths();
   const periodStarts = getPeriodStartDates();
+  const history = getPeriodHistory();
   
   if (cycleLengths.length === 0) {
     return {
@@ -173,7 +187,10 @@ export function getCycleAnalytics(): CycleAnalytics {
       regularityScore: 0,
       totalCycles: 0,
       averagePeriodLength: DEFAULT_PERIOD_LENGTH,
-      predictionConfidence: 0
+      predictionConfidence: 0,
+      cycleTrend: 'stable',
+      symptomPatterns: [],
+      healthScore: 0
     };
   }
   
@@ -181,19 +198,28 @@ export function getCycleAnalytics(): CycleAnalytics {
   const minCycleLength = Math.min(...cycleLengths);
   const maxCycleLength = Math.max(...cycleLengths);
   
-  // Calculate regularity - cycles within ±3 days of average are considered regular
+  // Calculate cycle trend
+  const cycleTrend = calculateCycleTrend(cycleLengths);
+  
+  // Calculate regularity
   const regularCycles = cycleLengths.filter(length => 
     Math.abs(length - averageCycleLength) <= REGULARITY_THRESHOLD
   ).length;
   
   const regularityScore = cycleLengths.length > 0 ? (regularCycles / cycleLengths.length) * 100 : 0;
-  const isRegular = regularityScore >= 70; // 70% of cycles within threshold
+  const isRegular = regularityScore >= 70;
   
-  // Calculate prediction confidence based on data quality
+  // Calculate prediction confidence
   let predictionConfidence = 0;
   if (cycleLengths.length >= 3) {
-    predictionConfidence = Math.min(100, (cycleLengths.length * 20) + (regularityScore * 0.5));
+    predictionConfidence = Math.min(100, (cycleLengths.length * 15) + (regularityScore * 0.6) + (history.length * 2));
   }
+  
+  // Analyze symptom patterns
+  const symptomPatterns = analyzeSymptomPatterns(history, periodStarts);
+  
+  // Calculate health score
+  const healthScore = calculateHealthScore(history, cycleLengths);
   
   return {
     averageCycleLength,
@@ -203,8 +229,122 @@ export function getCycleAnalytics(): CycleAnalytics {
     regularityScore: Math.round(regularityScore),
     totalCycles: cycleLengths.length,
     averagePeriodLength: calculateAveragePeriodLength(),
-    predictionConfidence: Math.round(predictionConfidence)
+    predictionConfidence: Math.round(predictionConfidence),
+    cycleTrend,
+    symptomPatterns,
+    healthScore
   };
+}
+
+// Calculate cycle trend
+function calculateCycleTrend(cycleLengths: number[]): 'stable' | 'increasing' | 'decreasing' {
+  if (cycleLengths.length < 3) return 'stable';
+  
+  const recent = cycleLengths.slice(-3);
+  const earlier = cycleLengths.slice(-6, -3);
+  
+  if (earlier.length === 0) return 'stable';
+  
+  const recentAvg = recent.reduce((sum, length) => sum + length, 0) / recent.length;
+  const earlierAvg = earlier.reduce((sum, length) => sum + length, 0) / earlier.length;
+  
+  const difference = recentAvg - earlierAvg;
+  
+  if (Math.abs(difference) < 1) return 'stable';
+  return difference > 0 ? 'increasing' : 'decreasing';
+}
+
+// Analyze symptom patterns across cycle phases
+function analyzeSymptomPatterns(history: PeriodDay[], periodStarts: Date[]): SymptomPattern[] {
+  const patterns: SymptomPattern[] = [];
+  
+  // Group symptoms by cycle phase
+  const phaseSymptoms = {
+    menstrual: [] as string[],
+    follicular: [] as string[],
+    ovulation: [] as string[],
+    luteal: [] as string[]
+  };
+  
+  history.forEach(day => {
+    const phase = getCyclePhaseForDate(day.date, periodStarts);
+    if (phase) {
+      if (day.symptoms.cramps !== SymptomIntensity.None) {
+        phaseSymptoms[phase].push('cramps');
+      }
+      if (day.symptoms.headache !== SymptomIntensity.None) {
+        phaseSymptoms[phase].push('headache');
+      }
+      if (day.symptoms.mood !== Mood.Neutral) {
+        phaseSymptoms[phase].push(`mood: ${day.symptoms.mood}`);
+      }
+    }
+  });
+  
+  // Create patterns for each phase
+  Object.entries(phaseSymptoms).forEach(([phase, symptoms]) => {
+    if (symptoms.length > 0) {
+      const uniqueSymptoms = [...new Set(symptoms)];
+      const severity = symptoms.length > 10 ? 'high' : symptoms.length > 5 ? 'medium' : 'low';
+      
+      patterns.push({
+        phase: phase as 'menstrual' | 'follicular' | 'ovulation' | 'luteal',
+        commonSymptoms: uniqueSymptoms.slice(0, 5),
+        severity
+      });
+    }
+  });
+  
+  return patterns;
+}
+
+// Calculate overall health score based on logged data
+function calculateHealthScore(history: PeriodDay[], cycleLengths: number[]): number {
+  let score = 100;
+  
+  // Deduct points for irregular cycles
+  if (cycleLengths.length > 0) {
+    const variance = calculateVariance(cycleLengths);
+    score -= Math.min(variance * 2, 20);
+  }
+  
+  // Deduct points for severe symptoms
+  const severeSymptomDays = history.filter(day => 
+    day.symptoms.cramps === SymptomIntensity.Severe ||
+    day.symptoms.headache === SymptomIntensity.Severe
+  ).length;
+  
+  const symptomPercentage = history.length > 0 ? (severeSymptomDays / history.length) * 100 : 0;
+  score -= Math.min(symptomPercentage, 30);
+  
+  return Math.max(0, Math.round(score));
+}
+
+// Get cycle phase for a specific date
+function getCyclePhaseForDate(date: Date, periodStarts: Date[]): 'menstrual' | 'follicular' | 'ovulation' | 'luteal' | null {
+  if (periodStarts.length === 0) return null;
+  
+  // Find the most recent period start before or on this date
+  const relevantStart = periodStarts
+    .filter(start => start <= date)
+    .sort((a, b) => b.getTime() - a.getTime())[0];
+  
+  if (!relevantStart) return null;
+  
+  const daysSinceStart = differenceInDays(date, relevantStart);
+  const periodLength = getPeriodLength();
+  
+  if (daysSinceStart < periodLength) return 'menstrual';
+  if (daysSinceStart < 14) return 'follicular';
+  if (daysSinceStart >= 14 && daysSinceStart <= 16) return 'ovulation';
+  return 'luteal';
+}
+
+// Calculate variance for cycle regularity
+function calculateVariance(numbers: number[]): number {
+  const mean = numbers.reduce((sum, num) => sum + num, 0) / numbers.length;
+  const squaredDiffs = numbers.map(num => Math.pow(num - mean, 2));
+  return squaredDiffs.reduce((sum, diff) => sum + diff, 0) / numbers.length;
 }
 
 // Set manual period start date
@@ -292,33 +432,38 @@ export function getLastPeriodStartDate(): Date | null {
   return periodStarts.length > 0 ? periodStarts[periodStarts.length - 1] : null;
 }
 
-// Enhanced prediction with confidence levels
-export function getEnhancedPrediction(): PredictionData | null {
+// Enhanced prediction with advanced analytics
+export function getAdvancedPrediction(): AdvancedPredictionData | null {
   const lastStart = getLastPeriodStartDate();
   if (!lastStart) return null;
   
-  const analytics = getCycleAnalytics();
+  const analytics = getAdvancedCycleAnalytics();
   const cycleLength = getCycleLength();
   const periodLength = getPeriodLength();
   
-  // Calculate next period
-  const nextPeriodStart = addDays(lastStart, cycleLength);
-  const nextPeriodEnd = addDays(nextPeriodStart, periodLength - 1);
+  // Calculate next period with confidence adjustments
+  let adjustedCycleLength = cycleLength;
+  if (analytics.cycleTrend === 'increasing') {
+    adjustedCycleLength += 1;
+  } else if (analytics.cycleTrend === 'decreasing') {
+    adjustedCycleLength -= 1;
+  }
   
-  // Calculate second period (for two-month view)
-  const secondPeriodStart = addDays(nextPeriodStart, cycleLength);
-  const secondPeriodEnd = addDays(secondPeriodStart, periodLength - 1);
+  const nextPeriodStart = addDays(lastStart, adjustedCycleLength);
+  const nextPeriodEnd = addDays(nextPeriodStart, periodLength - 1);
   
   // Calculate ovulation (14 days before next period)
   const nextOvulation = addDays(nextPeriodStart, -14);
-  const secondOvulation = addDays(secondPeriodStart, -14);
   
   // Calculate fertile window (5 days before ovulation + ovulation day)
   const fertileWindowStart = addDays(nextOvulation, -5);
   const fertileWindowEnd = nextOvulation;
   
-  const secondFertileWindowStart = addDays(secondOvulation, -5);
-  const secondFertileWindowEnd = secondOvulation;
+  // Calculate PMS window (5-10 days before period)
+  const pmsWindow = {
+    start: addDays(nextPeriodStart, -10),
+    end: addDays(nextPeriodStart, -5)
+  };
   
   // Calculate days until events
   const today = new Date();
@@ -327,8 +472,17 @@ export function getEnhancedPrediction(): PredictionData | null {
   
   // Determine confidence level
   let confidence: 'low' | 'medium' | 'high' = 'low';
-  if (analytics.predictionConfidence >= 70) confidence = 'high';
-  else if (analytics.predictionConfidence >= 40) confidence = 'medium';
+  if (analytics.predictionConfidence >= 75) confidence = 'high';
+  else if (analytics.predictionConfidence >= 50) confidence = 'medium';
+  
+  // Determine current cycle phase
+  const cyclePhase = getCyclePhaseForDate(today, getPeriodStartDates()) || 'follicular';
+  
+  // Generate recommendations
+  const recommendedActions = generateRecommendations(cyclePhase, analytics);
+  
+  // Identify risk factors
+  const riskFactors = identifyRiskFactors(analytics);
   
   return {
     nextPeriodStart,
@@ -338,8 +492,62 @@ export function getEnhancedPrediction(): PredictionData | null {
     fertileWindowEnd,
     daysUntilPeriod,
     daysUntilOvulation,
-    confidence
+    confidence,
+    pmsWindow,
+    cyclePhase,
+    recommendedActions,
+    riskFactors
   };
+}
+
+// Generate personalized recommendations
+function generateRecommendations(phase: string, analytics: CycleAnalytics): string[] {
+  const recommendations: string[] = [];
+  
+  switch (phase) {
+    case 'menstrual':
+      recommendations.push("Rest and stay hydrated");
+      recommendations.push("Use heat therapy for cramps");
+      if (analytics.healthScore < 70) {
+        recommendations.push("Consider iron-rich foods");
+      }
+      break;
+    case 'follicular':
+      recommendations.push("Good time for new projects");
+      recommendations.push("Increase protein intake");
+      break;
+    case 'ovulation':
+      recommendations.push("Peak fertility window");
+      recommendations.push("Stay active with high-energy workouts");
+      break;
+    case 'luteal':
+      recommendations.push("Practice stress management");
+      if (analytics.symptomPatterns.some(p => p.phase === 'luteal' && p.severity === 'high')) {
+        recommendations.push("Monitor PMS symptoms");
+      }
+      break;
+  }
+  
+  return recommendations.slice(0, 3);
+}
+
+// Identify potential risk factors
+function identifyRiskFactors(analytics: CycleAnalytics): string[] {
+  const risks: string[] = [];
+  
+  if (!analytics.isRegular) {
+    risks.push("Irregular cycles detected");
+  }
+  
+  if (analytics.healthScore < 60) {
+    risks.push("Frequent severe symptoms");
+  }
+  
+  if (analytics.cycleTrend !== 'stable') {
+    risks.push(`Cycle length ${analytics.cycleTrend}`);
+  }
+  
+  return risks;
 }
 
 // Legacy function for backward compatibility
@@ -598,4 +806,9 @@ export function getHealthTipsForPhase(date: Date = new Date()): string[] {
       "Get adequate sleep to support hormone balance"
     ];
   }
+}
+
+// Update the legacy function to use advanced prediction
+export function getEnhancedPrediction(): AdvancedPredictionData | null {
+  return getAdvancedPrediction();
 }

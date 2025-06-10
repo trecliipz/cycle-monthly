@@ -1,5 +1,6 @@
 
 import { Link, useLocation } from "react-router-dom";
+import { useState, useEffect } from "react";
 import { 
   Calendar as CalendarIcon, 
   Home as HomeIcon, 
@@ -12,8 +13,46 @@ import {
 export function BottomNavigation() {
   const location = useLocation();
   const currentPath = location.pathname;
+  const [userName, setUserName] = useState<string>("");
   
   const isActive = (path: string) => currentPath === path;
+
+  // Load user name from profile
+  const loadUserName = () => {
+    const savedProfile = localStorage.getItem("user_profile");
+    if (savedProfile) {
+      try {
+        const profile = JSON.parse(savedProfile);
+        if (profile.name) {
+          // Get first name only
+          const firstName = profile.name.split(' ')[0];
+          setUserName(firstName);
+        } else {
+          setUserName("");
+        }
+      } catch (error) {
+        console.error("Failed to parse user profile:", error);
+        setUserName("");
+      }
+    } else {
+      setUserName("");
+    }
+  };
+
+  useEffect(() => {
+    loadUserName();
+    
+    // Listen for profile updates
+    const handleProfileUpdate = () => {
+      loadUserName();
+    };
+    
+    window.addEventListener('profileUpdated', handleProfileUpdate);
+    
+    return () => {
+      window.removeEventListener('profileUpdated', handleProfileUpdate);
+    };
+  }, []);
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-background border-t border-border h-16 flex items-center justify-around px-4 z-50">
@@ -60,7 +99,7 @@ export function BottomNavigation() {
         }`}
       >
         <UserIcon size={20} />
-        <span className="text-xs">Account</span>
+        <span className="text-xs">{userName || "Account"}</span>
       </Link>
     </nav>
   );
