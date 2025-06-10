@@ -64,43 +64,79 @@ export function PeriodCalendar({
           }
           
           .current-period-day {
-            background-color: #fecaca !important;
-            color: #991b1b !important;
+            background-color: rgb(252 165 165) !important;
+            color: rgb(153 27 27) !important;
             border-radius: 6px;
+          }
+          
+          .dark .current-period-day {
+            background-color: rgb(127 29 29) !important;
+            color: rgb(254 226 226) !important;
           }
           
           .current-period-day:hover {
-            background-color: #fca5a5 !important;
+            background-color: rgb(248 113 113) !important;
+          }
+          
+          .dark .current-period-day:hover {
+            background-color: rgb(153 27 27) !important;
           }
           
           .fertile-window-day {
-            background-color: #dcfce7 !important;
-            color: #166534 !important;
+            background-color: rgb(220 252 231) !important;
+            color: rgb(22 101 52) !important;
             border-radius: 6px;
+          }
+          
+          .dark .fertile-window-day {
+            background-color: rgb(20 83 45) !important;
+            color: rgb(220 252 231) !important;
           }
           
           .fertile-window-day:hover {
-            background-color: #bbf7d0 !important;
+            background-color: rgb(187 247 208) !important;
+          }
+          
+          .dark .fertile-window-day:hover {
+            background-color: rgb(22 101 52) !important;
           }
           
           .ovulation-day {
-            background-color: #fff7ed !important;
-            color: #c2410c !important;
+            background-color: rgb(255 247 237) !important;
+            color: rgb(194 65 12) !important;
             border-radius: 6px;
+          }
+          
+          .dark .ovulation-day {
+            background-color: rgb(154 52 18) !important;
+            color: rgb(255 247 237) !important;
           }
           
           .ovulation-day:hover {
-            background-color: #fed7aa !important;
+            background-color: rgb(254 215 170) !important;
+          }
+          
+          .dark .ovulation-day:hover {
+            background-color: rgb(194 65 12) !important;
           }
           
           .prediction-day {
-            background-color: #fdf2f8 !important;
-            color: #be185d !important;
+            background-color: rgb(253 242 248) !important;
+            color: rgb(190 24 93) !important;
             border-radius: 6px;
           }
           
+          .dark .prediction-day {
+            background-color: rgb(131 24 67) !important;
+            color: rgb(253 242 248) !important;
+          }
+          
           .prediction-day:hover {
-            background-color: #fce7f3 !important;
+            background-color: rgb(252 231 243) !important;
+          }
+          
+          .dark .prediction-day:hover {
+            background-color: rgb(190 24 93) !important;
           }
           
           .current-period-day::after {
@@ -112,7 +148,11 @@ export function PeriodCalendar({
             width: 6px;
             height: 6px;
             border-radius: 50%;
-            background-color: #dc2626;
+            background-color: rgb(220 38 38);
+          }
+          
+          .dark .current-period-day::after {
+            background-color: rgb(254 226 226);
           }
           
           .fertile-window-day::after {
@@ -124,7 +164,11 @@ export function PeriodCalendar({
             width: 6px;
             height: 6px;
             border-radius: 50%;
-            background-color: #16a34a;
+            background-color: rgb(22 163 74);
+          }
+          
+          .dark .fertile-window-day::after {
+            background-color: rgb(220 252 231);
           }
           
           .ovulation-day::after {
@@ -136,7 +180,11 @@ export function PeriodCalendar({
             width: 6px;
             height: 6px;
             border-radius: 50%;
-            background-color: #ea580c;
+            background-color: rgb(234 88 12);
+          }
+          
+          .dark .ovulation-day::after {
+            background-color: rgb(255 247 237);
           }
           
           .prediction-day::after {
@@ -148,7 +196,11 @@ export function PeriodCalendar({
             width: 6px;
             height: 6px;
             border-radius: 50%;
-            background-color: #db2777;
+            background-color: rgb(219 39 119);
+          }
+          
+          .dark .prediction-day::after {
+            background-color: rgb(253 242 248);
           }
         `}
       </style>
@@ -160,7 +212,7 @@ export function PeriodCalendar({
         onSelect={onSelect}
         onMonthChange={setMonth}
         month={month}
-        className={cn("rounded-md border shadow p-3 pointer-events-auto", className)}
+        className={cn("rounded-md border shadow p-3 pointer-events-auto bg-card", className)}
         modifiers={{
           currentPeriod: (date) => isDateInCurrentPeriod(date),
           fertileWindow: (date) => isDateInFertileWindow(date),
@@ -178,19 +230,19 @@ export function PeriodCalendar({
       <div className="text-sm text-muted-foreground">
         <div className="grid grid-cols-2 gap-2">
           <div className="flex items-center">
-            <div className="w-3 h-3 rounded-full bg-red-400 mr-2"></div>
+            <div className="w-3 h-3 rounded-full bg-red-400 dark:bg-red-300 mr-2"></div>
             <span>Period Days</span>
           </div>
           <div className="flex items-center">
-            <div className="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
+            <div className="w-3 h-3 rounded-full bg-green-500 dark:bg-green-400 mr-2"></div>
             <span>Fertile Window</span>
           </div>
           <div className="flex items-center">
-            <div className="w-3 h-3 rounded-full bg-orange-500 mr-2"></div>
+            <div className="w-3 h-3 rounded-full bg-orange-500 dark:bg-orange-400 mr-2"></div>
             <span>Ovulation</span>
           </div>
           <div className="flex items-center">
-            <div className="w-3 h-3 rounded-full bg-pink-600 mr-2"></div>
+            <div className="w-3 h-3 rounded-full bg-pink-600 dark:bg-pink-400 mr-2"></div>
             <span>Predicted Period</span>
           </div>
         </div>

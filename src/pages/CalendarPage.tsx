@@ -48,12 +48,12 @@ export default function CalendarPage() {
   const periodData = getDataForDate(selectedDate);
 
   return (
-    <div className="flex flex-col pb-20 px-4 space-y-5">
+    <div className="flex flex-col pb-20 px-4 space-y-5 bg-background min-h-screen">
       <header className="mt-6 mb-2">
-        <h1 className="text-2xl font-semibold text-center text-period-accent">Calendar</h1>
+        <h1 className="text-2xl font-semibold text-center text-foreground">Calendar</h1>
       </header>
 
-      <Card className="bg-white shadow-sm p-4">
+      <Card className="bg-card shadow-sm p-4 border">
         <PeriodCalendar
           key={`calendar-${key}`}
           selectedDate={selectedDate}
@@ -62,17 +62,17 @@ export default function CalendarPage() {
         />
       </Card>
 
-      <Card className="bg-white shadow-sm p-4">
+      <Card className="bg-card shadow-sm p-4 border">
         {!showForm ? (
           <div className="flex flex-col space-y-4">
             <div className="flex justify-between items-center">
-              <h2 className="text-lg font-medium">{format(selectedDate, 'MMMM d, yyyy')}</h2>
+              <h2 className="text-lg font-medium text-foreground">{format(selectedDate, 'MMMM d, yyyy')}</h2>
               <div className="flex gap-2">
                 <Button 
                   variant="outline" 
                   size="sm" 
                   onClick={handleSetPeriodStart}
-                  className="text-period-accent border-period-accent hover:bg-period-lavender/20"
+                  className="text-primary border-primary hover:bg-primary/10"
                 >
                   <CalendarIcon className="h-4 w-4 mr-1" />
                   Set as Period Start
@@ -81,7 +81,7 @@ export default function CalendarPage() {
                   variant="ghost" 
                   size="sm" 
                   onClick={() => setShowForm(true)}
-                  className="text-period-accent hover:bg-period-lavender/20"
+                  className="text-primary hover:bg-primary/10"
                 >
                   <Pencil className="h-4 w-4 mr-1" />
                   {periodData ? "Edit" : "Log"}
@@ -90,7 +90,7 @@ export default function CalendarPage() {
             </div>
             
             {periodData ? (
-              <div className="space-y-2 text-sm">
+              <div className="space-y-2 text-sm text-foreground">
                 {periodData.flow !== "none" && (
                   <p><span className="font-medium">Flow:</span> {periodData.flow}</p>
                 )}
