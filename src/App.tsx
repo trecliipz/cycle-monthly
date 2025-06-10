@@ -12,6 +12,7 @@ import LogPage from "./pages/LogPage";
 import InsightsPage from "./pages/InsightsPage";
 import SettingsPage from "./pages/SettingsPage";
 import HealthPage from "./pages/HealthPage";
+import AccountPage from "./pages/AccountPage";
 import NotFound from "./pages/NotFound";
 
 // Initialize query client
@@ -42,6 +43,7 @@ const App = () => (
             <Route path="/insights" element={<InsightsPage />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/health" element={<HealthPage />} />
+            <Route path="/account" element={<AccountPage />} />
             <Route path="/legacy" element={<Index />} />
             <Route path="*" element={<NotFound />} />
           </Routes>

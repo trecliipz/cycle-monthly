@@ -4,14 +4,24 @@ import { PeriodCalendar } from "@/components/PeriodCalendar";
 import { PeriodForm } from "@/components/PeriodForm";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Pencil, Calendar as CalendarIcon } from "lucide-react";
-import { format } from "date-fns";
-import { getDataForDate, setManualPeriodStartDate } from "@/utils/periodUtils";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Pencil, Calendar as CalendarIcon, AlertCircle } from "lucide-react";
+import { format, addMonths } from "date-fns";
+import { 
+  getDataForDate, 
+  setManualPeriodStartDate,
+  getEnhancedPrediction,
+  getPeriodLength,
+  getCycleLength
+} from "@/utils/periodUtils";
 
 export default function CalendarPage() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [showForm, setShowForm] = useState(false);
   const [key, setKey] = useState(0);
+  const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
+  const [viewMode, setViewMode] = useState<"thisMonth" | "nextMonth" | "twoMonths">("thisMonth");
 
   const handleDateSelect = (date: Date | undefined) => {
     if (date) {
@@ -46,6 +56,59 @@ export default function CalendarPage() {
   }, []);
 
   const periodData = getDataForDate(selectedDate);
+  const prediction = getEnhancedPrediction();
+  
+  // Calculate confidence styling
+  const getConfidenceBadge = () => {
+    if (!prediction) return null;
+    
+    let color = "bg-red-100 text-red-800";
+    if (prediction.confidence === "high") {
+      color = "bg-green-100 text-green-800";
+    } else if (prediction.confidence === "medium") {
+      color = "bg-amber-100 text-amber-800";
+    }
+    
+    return (
+      <Badge variant="outline" className={`${color} ml-2`}>
+        {prediction.confidence} confidence
+      </Badge>
+    );
+  };
+
+  // Get forecast information
+  const getPredictionSummary = () => {
+    if (!prediction) return null;
+    
+    const cycleLength = getCycleLength();
+    const periodLength = getPeriodLength();
+    
+    return (
+      <div className="mt-4 space-y-3 text-sm">
+        <div className="flex items-center">
+          <AlertCircle className="h-4 w-4 mr-2 text-primary" />
+          <span className="font-medium">Cycle Forecast</span>
+          {getConfidenceBadge()}
+        </div>
+        <p>
+          <span className="font-medium">Next period:</span>{" "}
+          {format(prediction.nextPeriodStart, "MMMM d")} - {format(prediction.nextPeriodEnd, "MMMM d")}
+          {prediction.daysUntilPeriod > 0 ? ` (in ${prediction.daysUntilPeriod} days)` : " (today)"}
+        </p>
+        <p>
+          <span className="font-medium">Ovulation:</span>{" "}
+          {format(prediction.nextOvulation, "MMMM d")}
+          {prediction.daysUntilOvulation > 0 ? ` (in ${prediction.daysUntilOvulation} days)` : " (today)"}
+        </p>
+        <p>
+          <span className="font-medium">Cycle length:</span> {cycleLength} days
+        </p>
+        <p>
+          <span className="font-medium">Period length:</span> {periodLength} days
+        </p>
+      </div>
+    );
+  };
 
   return (
     <div className="flex flex-col pb-20 px-4 space-y-5 bg-background min-h-screen">
@@ -53,18 +116,74 @@ export default function CalendarPage() {
         <h1 className="text-2xl font-semibold text-center text-foreground">Calendar</h1>
       </header>
 
-      <Card className="bg-card shadow-sm p-4 border">
-        <PeriodCalendar
-          key={`calendar-${key}`}
-          selectedDate={selectedDate}
-          onSelect={handleDateSelect}
-          className="mx-auto"
-        />
-      </Card>
+      <Tabs 
+        defaultValue="thisMonth" 
+        value={viewMode} 
+        onValueChange={(value) => setViewMode(value as "thisMonth" | "nextMonth" | "twoMonths")}
+        className="w-full"
+      >
+        <TabsList className="grid grid-cols-3 mb-4">
+          <TabsTrigger value="thisMonth">This Month</TabsTrigger>
+          <TabsTrigger value="nextMonth">Next Month</TabsTrigger>
+          <TabsTrigger value="twoMonths">2 Month View</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="thisMonth">
+          <Card className="bg-card shadow-sm p-4 border">
+            <PeriodCalendar
+              key={`calendar-${key}`}
+              selectedDate={selectedDate}
+              onSelect={handleDateSelect}
+              className="mx-auto"
+              month={currentMonth}
+              onMonthChange={setCurrentMonth}
+            />
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="nextMonth">
+          <Card className="bg-card shadow-sm p-4 border">
+            <PeriodCalendar
+              key={`calendar-next-${key}`}
+              selectedDate={selectedDate}
+              onSelect={handleDateSelect}
+              className="mx-auto"
+              month={addMonths(new Date(), 1)}
+              onMonthChange={(date) => setCurrentMonth(date)}
+            />
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="twoMonths" className="space-y-4">
+          <Card className="bg-card shadow-sm p-4 border">
+            <PeriodCalendar
+              key={`calendar-current-${key}`}
+              selectedDate={selectedDate}
+              onSelect={handleDateSelect}
+              className="mx-auto"
+              month={currentMonth}
+              onMonthChange={setCurrentMonth}
+            />
+          </Card>
+          
+          <Card className="bg-card shadow-sm p-4 border">
+            <PeriodCalendar
+              key={`calendar-next-${key}`}
+              selectedDate={selectedDate}
+              onSelect={handleDateSelect}
+              className="mx-auto"
+              month={addMonths(currentMonth, 1)}
+              onMonthChange={(date) => setCurrentMonth(addMonths(date, -1))}
+            />
+          </Card>
+        </TabsContent>
+      </Tabs>
 
       <Card className="bg-card shadow-sm p-4 border">
+        {getPredictionSummary()}
+        
         {!showForm ? (
-          <div className="flex flex-col space-y-4">
+          <div className="flex flex-col space-y-4 mt-4">
             <div className="flex justify-between items-center">
               <h2 className="text-lg font-medium text-foreground">{format(selectedDate, 'MMMM d, yyyy')}</h2>
               <div className="flex gap-2">

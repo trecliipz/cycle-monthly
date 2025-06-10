@@ -8,23 +8,36 @@ import {
   isDateInFertileWindow,
   predictNextPeriod,
   getPeriodLength,
-  getLastPeriodStartDate
+  getLastPeriodStartDate,
+  getDataForDate
 } from "@/utils/periodUtils";
-import { addDays, startOfDay } from "date-fns";
+import { addDays, startOfDay, format } from "date-fns";
 
 interface PeriodCalendarProps {
   selectedDate: Date | undefined;
   onSelect: (date: Date | undefined) => void;
   className?: string;
+  month?: Date;
+  onMonthChange?: (date: Date) => void;
 }
 
 export function PeriodCalendar({ 
   selectedDate, 
   onSelect,
-  className 
+  className,
+  month,
+  onMonthChange
 }: PeriodCalendarProps) {
-  const [month, setMonth] = useState<Date>(new Date());
+  const [calendarMonth, setCalendarMonth] = useState<Date>(month || new Date());
   const [key, setKey] = useState(0);
+  
+  // Handle month change and pass to parent if needed
+  const handleMonthChange = (date: Date) => {
+    setCalendarMonth(date);
+    if (onMonthChange) {
+      onMonthChange(date);
+    }
+  };
   
   // Listen for cycle settings updates
   useEffect(() => {
@@ -38,6 +51,12 @@ export function PeriodCalendar({
       window.removeEventListener('cycleSettingsUpdated', handleCycleUpdate);
     };
   }, []);
+  
+  useEffect(() => {
+    if (month) {
+      setCalendarMonth(month);
+    }
+  }, [month]);
   
   // Get prediction information (will recalculate when key changes)
   const prediction = predictNextPeriod();
@@ -54,6 +73,33 @@ export function PeriodCalendar({
     
     return checkDate >= periodStart && checkDate <= periodEnd;
   };
+
+  // Helper to get additional day information for the calendar tooltip
+  const getDayDescription = (date: Date): string => {
+    // Check if there's logged data
+    const dayData = getDataForDate(date);
+    if (dayData && dayData.flow !== "none") {
+      return `Period day (${dayData.flow})`;
+    }
+    
+    if (isDateInCurrentPeriod(date)) {
+      return "Period day";
+    }
+    
+    if (isDateInPredictedPeriod(date)) {
+      return "Predicted period";
+    }
+    
+    if (isDateInOvulationPeriod(date)) {
+      return "Ovulation";
+    }
+    
+    if (isDateInFertileWindow(date)) {
+      return "Fertile window";
+    }
+    
+    return format(date, "MMMM d, yyyy");
+  };
   
   return (
     <div className="flex flex-col space-y-4">
@@ -64,22 +110,14 @@ export function PeriodCalendar({
           }
           
           .current-period-day {
-            background-color: rgb(252 165 165) !important;
-            color: rgb(153 27 27) !important;
+            background-color: var(--primary) !important;
+            color: var(--primary-foreground) !important;
             border-radius: 6px;
           }
           
-          .dark .current-period-day {
-            background-color: rgb(127 29 29) !important;
-            color: rgb(254 226 226) !important;
-          }
-          
           .current-period-day:hover {
-            background-color: rgb(248 113 113) !important;
-          }
-          
-          .dark .current-period-day:hover {
-            background-color: rgb(153 27 27) !important;
+            background-color: hsl(var(--primary) / 0.9) !important;
+            color: var(--primary-foreground) !important;
           }
           
           .fertile-window-day {
@@ -102,7 +140,7 @@ export function PeriodCalendar({
           }
           
           .ovulation-day {
-            background-color: rgb(255 247 237) !important;
+            background-color: rgb(254 215 170) !important;
             color: rgb(194 65 12) !important;
             border-radius: 6px;
           }
@@ -114,6 +152,7 @@ export function PeriodCalendar({
           
           .ovulation-day:hover {
             background-color: rgb(254 215 170) !important;
+            color: rgb(154 52 18) !important;
           }
           
           .dark .ovulation-day:hover {
@@ -139,54 +178,17 @@ export function PeriodCalendar({
             background-color: rgb(190 24 93) !important;
           }
           
-          .current-period-day::after {
-            content: '';
-            position: absolute;
-            bottom: 2px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background-color: rgb(220 38 38);
+          .rdp-day_selected {
+            border: 2px solid var(--ring) !important;
+          }
+
+          .rdp-day_today {
+            border: 1px dashed var(--muted-foreground) !important;
           }
           
-          .dark .current-period-day::after {
-            background-color: rgb(254 226 226);
-          }
-          
-          .fertile-window-day::after {
-            content: '';
-            position: absolute;
-            bottom: 2px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background-color: rgb(22 163 74);
-          }
-          
-          .dark .fertile-window-day::after {
-            background-color: rgb(220 252 231);
-          }
-          
-          .ovulation-day::after {
-            content: '';
-            position: absolute;
-            bottom: 2px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background-color: rgb(234 88 12);
-          }
-          
-          .dark .ovulation-day::after {
-            background-color: rgb(255 247 237);
-          }
-          
+          .current-period-day::after,
+          .fertile-window-day::after,
+          .ovulation-day::after,
           .prediction-day::after {
             content: '';
             position: absolute;
@@ -196,6 +198,29 @@ export function PeriodCalendar({
             width: 6px;
             height: 6px;
             border-radius: 50%;
+          }
+          
+          .current-period-day::after {
+            background-color: var(--background);
+          }
+          
+          .fertile-window-day::after {
+            background-color: rgb(22 163 74);
+          }
+          
+          .dark .fertile-window-day::after {
+            background-color: rgb(220 252 231);
+          }
+          
+          .ovulation-day::after {
+            background-color: rgb(234 88 12);
+          }
+          
+          .dark .ovulation-day::after {
+            background-color: rgb(255 247 237);
+          }
+          
+          .prediction-day::after {
             background-color: rgb(219 39 119);
           }
           
@@ -210,8 +235,8 @@ export function PeriodCalendar({
         mode="single"
         selected={selectedDate}
         onSelect={onSelect}
-        onMonthChange={setMonth}
-        month={month}
+        onMonthChange={handleMonthChange}
+        month={calendarMonth}
         className={cn("rounded-md border shadow p-3 pointer-events-auto bg-card", className)}
         modifiers={{
           currentPeriod: (date) => isDateInCurrentPeriod(date),
@@ -225,24 +250,31 @@ export function PeriodCalendar({
           ovulation: "ovulation-day", 
           prediction: "prediction-day",
         }}
+        components={{
+          DayContent: ({ date, ...props }) => (
+            <div title={getDayDescription(date)} {...props}>
+              {date.getDate()}
+            </div>
+          ),
+        }}
       />
       
       <div className="text-sm text-muted-foreground">
         <div className="grid grid-cols-2 gap-2">
           <div className="flex items-center">
-            <div className="w-3 h-3 rounded-full bg-red-400 dark:bg-red-300 mr-2"></div>
-            <span>Period Days</span>
+            <div className="w-3 h-3 rounded-full bg-primary dark:bg-primary mr-2"></div>
+            <span>Current Period</span>
           </div>
           <div className="flex items-center">
-            <div className="w-3 h-3 rounded-full bg-green-500 dark:bg-green-400 mr-2"></div>
+            <div className="w-3 h-3 rounded-full bg-green-500 dark:bg-green-700 mr-2"></div>
             <span>Fertile Window</span>
           </div>
           <div className="flex items-center">
-            <div className="w-3 h-3 rounded-full bg-orange-500 dark:bg-orange-400 mr-2"></div>
+            <div className="w-3 h-3 rounded-full bg-orange-400 dark:bg-orange-600 mr-2"></div>
             <span>Ovulation</span>
           </div>
           <div className="flex items-center">
-            <div className="w-3 h-3 rounded-full bg-pink-600 dark:bg-pink-400 mr-2"></div>
+            <div className="w-3 h-3 rounded-full bg-pink-500 dark:bg-pink-700 mr-2"></div>
             <span>Predicted Period</span>
           </div>
         </div>

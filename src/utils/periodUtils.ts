@@ -298,19 +298,27 @@ export function getEnhancedPrediction(): PredictionData | null {
   if (!lastStart) return null;
   
   const analytics = getCycleAnalytics();
-  const cycleLength = analytics.averageCycleLength;
-  const periodLength = analytics.averagePeriodLength;
+  const cycleLength = getCycleLength();
+  const periodLength = getPeriodLength();
   
   // Calculate next period
   const nextPeriodStart = addDays(lastStart, cycleLength);
   const nextPeriodEnd = addDays(nextPeriodStart, periodLength - 1);
   
+  // Calculate second period (for two-month view)
+  const secondPeriodStart = addDays(nextPeriodStart, cycleLength);
+  const secondPeriodEnd = addDays(secondPeriodStart, periodLength - 1);
+  
   // Calculate ovulation (14 days before next period)
   const nextOvulation = addDays(nextPeriodStart, -14);
+  const secondOvulation = addDays(secondPeriodStart, -14);
   
   // Calculate fertile window (5 days before ovulation + ovulation day)
   const fertileWindowStart = addDays(nextOvulation, -5);
   const fertileWindowEnd = nextOvulation;
+  
+  const secondFertileWindowStart = addDays(secondOvulation, -5);
+  const secondFertileWindowEnd = secondOvulation;
   
   // Calculate days until events
   const today = new Date();
